@@ -33,11 +33,11 @@ All ten languages use the same C++ evaluator. [Setup and examples by language](B
 | Java | ✓ | ✓ |
 | Julia | ✓ | ✓ |
 | Lua | ✓ | ✓ |
-| MATLAB | ✓ | |
+| MATLAB/Octave | ✓ | ✓\* |
 | Python | ✓ | ✓ |
 | Rust | ✓ | ✓ |
 
-The MATLAB binding passed its checks in GNU Octave. Testing in MATLAB itself is pending.
+\* Tests passed in GNU Octave. Testing in MATLAB is pending.
 
 ## Python 3.9+
 
