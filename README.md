@@ -18,9 +18,22 @@ Change `rate_hz` to `100` and the next load gives you a 10 ms interval and 200 s
 
 ## Supported languages
 
-Use the same file in **C, C++, C#, Go, Java, Julia, Lua, MATLAB, Python, and Rust**.
-All ten use the same evaluator, so a Python analysis and a C++ application get
-the same values. [Setup and examples by language](BINDINGS.md)
+All ten languages use the same C++ evaluator. [Setup and examples by language](BINDINGS.md)
+
+| Language | Implemented | Tested on Linux |
+| --- | :---: | :---: |
+| C | ✓ | ✓ |
+| C++ | ✓ | ✓ |
+| C# | ✓ | ✓ |
+| Go | ✓ | ✓ |
+| Java | ✓ | ✓ |
+| Julia | ✓ | ✓ |
+| Lua | ✓ | ✓ |
+| MATLAB | ✓ | |
+| Python | ✓ | ✓ |
+| Rust | ✓ | ✓ |
+
+The MATLAB binding passed its checks in GNU Octave. Testing in MATLAB itself is pending.
 
 ## Python 3.9+
 
