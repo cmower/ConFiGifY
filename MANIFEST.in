@@ -1,1 +1,1 @@
-include src/c/cfgy.h src/cpp/cfgy
+include src/c/cfgy.h src/cpp/cfgy src/cpp/evaluation.hpp

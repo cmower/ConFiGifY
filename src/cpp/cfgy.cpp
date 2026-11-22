@@ -1,4 +1,4 @@
-#include <cfgy>
+#include "evaluation.hpp"
 
 #include <charconv>
 #include <cmath>
@@ -14,8 +14,9 @@
 namespace cfgy {
 namespace {
 
-using Integer = std::int64_t;
-using Scopes = std::vector<const Value::Map*>;
+using detail::Eval;
+using detail::Integer;
+using Scopes = std::vector<const Eval::Map*>;
 constexpr auto min_int = std::numeric_limits<Integer>::min();
 constexpr auto max_int = std::numeric_limits<Integer>::max();
 const double pi = std::acos(-1.0);
@@ -140,15 +141,6 @@ std::vector<Line> read_lines(std::istream& input, const std::string& source) {
     return lines;
 }
 
-bool is_number(const Value& value) {
-    return std::holds_alternative<Integer>(value.data) || std::holds_alternative<double>(value.data);
-}
-
-double to_double(const Value& value) {
-    if (const auto* n = std::get_if<Integer>(&value.data)) return static_cast<double>(*n);
-    return value.as_float();
-}
-
 int precedence(const std::string& op) {
     if (op == "+" || op == "-") return 1;
     if (op == "*" || op == "/") return 2;
@@ -157,10 +149,11 @@ int precedence(const std::string& op) {
 
 class Expression {
 public:
-    Expression(const Line& line, std::size_t start, const Scopes& scopes, const std::string& source)
-        : line_(line), i_(start), scopes_(scopes), source_(source) {}
+    Expression(const Line& line, std::size_t start, const Scopes& scopes, const std::string& source,
+               detail::Random& random)
+        : line_(line), i_(start), scopes_(scopes), source_(source), random_(random) {}
 
-    Value parse() {
+    Eval parse() {
         auto value = expression();
         require("end");
         return value;
@@ -171,6 +164,7 @@ private:
     std::size_t i_;
     const Scopes& scopes_;
     const std::string& source_;
+    detail::Random& random_;
 
     bool accept(const std::string& kind) {
         if (line_[i_].kind != kind) return false;
@@ -182,18 +176,18 @@ private:
         if (!accept(kind)) fail(source_, line_[i_], "expected '" + kind + "'");
     }
 
-    Value finite(double n, const Token& token) const {
+    Eval finite(double n, const Token& token) const {
         if (!std::isfinite(n)) fail(source_, token, "float out of range");
-        return Value{n};
+        return Eval{n};
     }
 
-    Value number(const Token& token, bool negative = false) const {
+    Eval number(const Token& token, bool negative = false) const {
         const std::string text = negative ? "-" + token.text : token.text;
         if (text.find_first_of(".eE") == std::string::npos) {
             Integer n;
             const auto result = std::from_chars(text.data(), text.data() + text.size(), n);
             if (result.ec != std::errc{}) fail(source_, token, "integer out of range");
-            return Value{n};
+            return Eval{n};
         }
         std::istringstream input(text);
         input.imbue(std::locale::classic());
@@ -202,8 +196,8 @@ private:
         return finite(n, token);
     }
 
-    Value::List arguments(const std::string& closing) {
-        Value::List args;
+    Eval::List arguments(const std::string& closing) {
+        Eval::List args;
         if (!accept(closing)) {
             do {
                 args.push_back(expression());
@@ -214,7 +208,7 @@ private:
         return args;
     }
 
-    Value call(const Token& name) {
+    Eval call(const Token& name) {
         using Function = double (*)(double);
         static const std::map<std::string, Function> functions = {
             {"torad", [](double x) { return x * (pi / 180.0); }},
@@ -222,16 +216,28 @@ private:
             {"abs", std::fabs}, {"sin", std::sin}, {"cos", std::cos}, {"tan", std::tan},
             {"sqrt", std::sqrt}, {"floor", std::floor}, {"ceil", std::ceil}
         };
+        auto args = arguments(")");
+        try {
+            if (name.text == "matrix" || name.text == "transpose") {
+                if (args.size() != 1) fail(source_, name, name.text + " expects one matrix or list of rows");
+                auto matrix = detail::as_matrix(std::move(args.front()));
+                if (name.text == "transpose") return Eval{detail::transpose(matrix)};
+                return Eval{std::move(matrix)};
+            }
+            if (name.text.compare(0, 4, "Rot.") == 0) return detail::rotation(name.text, args);
+            if (name.text.compare(0, 5, "Rand.") == 0) return random_.call(name.text, args);
+        } catch (const std::domain_error& e) {
+            fail(source_, name, e.what());
+        }
         const auto fn = functions.find(name.text);
         if (fn == functions.end()) fail(source_, name, "unknown function '" + name.text + "'");
-        auto args = arguments(")");
         if (args.empty()) fail(source_, name, name.text + " expects one or more numbers");
         for (auto& arg : args) {
             if (!is_number(arg)) fail(source_, name, name.text + " expects one or more numbers");
             if (name.text == "abs" && std::holds_alternative<Integer>(arg.data)) {
                 const auto n = arg.as_int();
                 if (n == min_int) fail(source_, name, "integer out of range");
-                arg = Value{n < 0 ? -n : n};
+                arg = Eval{n < 0 ? -n : n};
             } else {
                 const double result = fn->second(to_double(arg));
                 if (std::isnan(result)) fail(source_, name, name.text + " argument outside its domain");
@@ -239,15 +245,21 @@ private:
             }
         }
         if (args.size() == 1) return std::move(args.front());
-        return Value{std::move(args)};
+        return Eval{std::move(args)};
     }
 
-    Value named(const Token& name) {
+    Eval named(const Token& name) {
         if (accept("(")) return call(name);
-        static const Value::Map constants = {
-            {"null", Value{nullptr}}, {"true", Value{true}}, {"false", Value{false}}, {"pi", Value{pi}}
+        if (line_[i_].kind == "." && line_[i_ + 1].kind == "name" && line_[i_ + 2].kind == "(") {
+            Token function = name;
+            function.text += "." + line_[i_ + 1].text;
+            i_ += 3;
+            return call(function);
+        }
+        static const Eval::Map constants = {
+            {"null", Eval{nullptr}}, {"true", Eval{true}}, {"false", Eval{false}}, {"pi", Eval{pi}}
         };
-        const Value* value = nullptr;
+        const Eval* value = nullptr;
         const auto constant = constants.find(name.text);
         if (constant != constants.end()) value = &constant->second;
         for (auto s = scopes_.rbegin(); !value && s != scopes_.rend(); ++s) {
@@ -258,32 +270,34 @@ private:
         while (accept(".")) {
             const auto& key = line_[i_];
             require("name");
-            const auto* map = std::get_if<Value::Map>(&value->data);
+            const auto* map = std::get_if<Eval::Map>(&value->data);
             if (!map || !map->count(key.text)) fail(source_, key, "unknown field '" + key.text + "'");
             value = &map->at(key.text);
         }
         return *value;
     }
 
-    Value operand() {
+    Eval operand() {
         const auto& token = line_[i_];
         if (accept("+") || accept("-")) {
             const bool negative = token.kind == "-";
             const auto& next = line_[i_];
             if (accept("number")) return number(next, negative);
             auto value = operand();
+            if (detail::is_matrix_operand(value))
+                return matrix_op(token, '*', std::move(value), Eval{negative ? -1.0 : 1.0});
             if (!is_number(value)) fail(source_, token, "unary sign expects a number");
             if (!negative) return value;
             if (auto* n = std::get_if<Integer>(&value.data)) {
                 if (*n == min_int) fail(source_, token, "integer out of range");
-                return Value{-*n};
+                return Eval{-*n};
             }
-            return Value{-value.as_float()};
+            return Eval{-value.as_float()};
         }
         if (accept("number")) return number(token);
-        if (accept("string")) return Value{token.text};
+        if (accept("string")) return Eval{token.text};
         if (accept("name")) return named(token);
-        if (accept("[")) return Value{arguments("]")};
+        if (accept("[")) return Eval{arguments("]")};
         if (accept("(")) {
             auto value = expression();
             require(")");
@@ -292,28 +306,38 @@ private:
         fail(source_, token, "expected a value");
     }
 
-    Value integer_op(const Token& op, Integer a, Integer b) const {
+    Eval integer_op(const Token& op, Integer a, Integer b) const {
         if (op.kind == "+") {
-            if (!((b > 0 && a > max_int - b) || (b < 0 && a < min_int - b))) return Value{a + b};
+            if (!((b > 0 && a > max_int - b) || (b < 0 && a < min_int - b))) return Eval{a + b};
         } else if (op.kind == "-") {
-            if (!((b > 0 && a < min_int + b) || (b < 0 && a > max_int + b))) return Value{a - b};
+            if (!((b > 0 && a < min_int + b) || (b < 0 && a > max_int + b))) return Eval{a - b};
         } else {
             // Check by division before multiplying to avoid signed overflow.
             const bool overflow = (a > 0 && (b > max_int / a || b < min_int / a)) ||
                                   (a < 0 && b > 0 && a < min_int / b) ||
                                   (a < 0 && b < 0 && a < max_int / b);
-            if (!overflow) return Value{a * b};
+            if (!overflow) return Eval{a * b};
         }
         fail(source_, op, "integer out of range");
     }
 
-    Value apply(const Token& op, Value left, const Value& right) const {
-        if (op.kind == "+" && std::holds_alternative<Value::List>(left.data) &&
-            std::holds_alternative<Value::List>(right.data)) {
-            auto& list = std::get<Value::List>(left.data);
+    Eval matrix_op(const Token& token, char op, Eval left, Eval right) const {
+        try {
+            return detail::matrix_operation(op, std::move(left), std::move(right));
+        } catch (const std::domain_error& e) {
+            fail(source_, token, e.what());
+        }
+    }
+
+    Eval apply(const Token& op, Eval left, Eval right) const {
+        if (op.kind == "+" && std::holds_alternative<Eval::List>(left.data) &&
+            std::holds_alternative<Eval::List>(right.data)) {
+            auto& list = std::get<Eval::List>(left.data);
             list.insert(list.end(), right.as_list().begin(), right.as_list().end());
             return left;
         }
+        if (detail::is_matrix_operand(left) || detail::is_matrix_operand(right))
+            return matrix_op(op, op.kind.front(), std::move(left), std::move(right));
         if (!is_number(left) || !is_number(right)) fail(source_, op, "invalid operands for '" + op.kind + "'");
         if (op.kind != "/" && std::holds_alternative<Integer>(left.data) &&
             std::holds_alternative<Integer>(right.data)) {
@@ -327,12 +351,12 @@ private:
         return finite(a / b, op);
     }
 
-    Value expression(int minimum = 1) {
+    Eval expression(int minimum = 1) {
         auto left = operand();
         while (precedence(line_[i_].kind) >= minimum) {
             const auto& op = line_[i_++];
             auto right = expression(precedence(op.kind) + 1);
-            left = apply(op, std::move(left), right);
+            left = apply(op, std::move(left), std::move(right));
         }
         return left;
     }
@@ -343,8 +367,8 @@ public:
     Document(std::istream& input, const std::string& source)
         : lines_(read_lines(input, source)), source_(source) {}
 
-    Value parse() {
-        if (lines_.empty()) return Value{Value::Map{}};
+    Eval parse() {
+        if (lines_.empty()) return Eval{Eval::Map{}};
         const auto& first = lines_.front();
         if (first.front().column != 1 || !is_entry(first)) {
             fail(source_, first.front(), "expected a top-level mapping");
@@ -356,6 +380,7 @@ private:
     std::vector<Line> lines_;
     const std::string& source_;
     Scopes scopes_;
+    detail::Random random_;
     std::size_t i_ = 0;
 
     static bool is_entry(const Line& line) {
@@ -364,22 +389,22 @@ private:
 
     static bool is_item(const Line& line) { return line[0].kind == "-" && line[1].kind == "end"; }
 
-    Value value(const Line& line, std::size_t start) {
-        if (line[start].kind != "end") return Expression(line, start, scopes_, source_).parse();
+    Eval value(const Line& line, std::size_t start) {
+        if (line[start].kind != "end") return Expression(line, start, scopes_, source_, random_).parse();
         if (i_ < lines_.size() && lines_[i_][0].column > line[0].column) return block();
-        return Value{nullptr};
+        return Eval{nullptr};
     }
 
-    Value block() {
+    Eval block() {
         const auto& first = lines_[i_];
         const auto column = first[0].column;
         const bool mapping = is_entry(first);
         if (!mapping && !is_item(first)) {
             ++i_;
-            return Expression(first, 0, scopes_, source_).parse();
+            return Expression(first, 0, scopes_, source_, random_).parse();
         }
-        Value::Map fields;
-        Value::List items;
+        Eval::Map fields;
+        Eval::List items;
         if (mapping) scopes_.push_back(&fields);
         while (i_ < lines_.size() && lines_[i_][0].column >= column) {
             const auto& line = lines_[i_++];
@@ -396,9 +421,9 @@ private:
         }
         if (mapping) {
             scopes_.pop_back();
-            return Value{std::move(fields)};
+            return Eval{std::move(fields)};
         }
-        return Value{std::move(items)};
+        return Eval{std::move(items)};
     }
 };
 
@@ -442,14 +467,14 @@ std::ostream& operator<<(std::ostream& out, const Value& value) {
 
 Value loads(const std::string& text, const std::string& source) {
     std::istringstream input(text);
-    return Document(input, source).parse();
+    return detail::materialize(Document(input, source).parse());
 }
 
 Value load(const std::string& path) {
     if (path.find('\0') != std::string::npos) throw ConfigError("NUL in file path");
     std::ifstream input(std::filesystem::u8path(path), std::ios::binary);
     if (!input) throw ConfigError(path + ": could not open file");
-    return Document(input, path).parse();
+    return detail::materialize(Document(input, path).parse());
 }
 
 }  // namespace cfgy

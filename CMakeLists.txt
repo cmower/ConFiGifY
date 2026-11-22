@@ -3,7 +3,7 @@ project(ConFiGifY LANGUAGES C CXX)
 include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build shared libraries for language bindings" ON)
-add_library(cfgy src/cpp/cfgy.cpp src/c/cfgy_c.cpp)
+add_library(cfgy src/cpp/cfgy.cpp src/cpp/evaluation.cpp src/c/cfgy_c.cpp)
 target_include_directories(cfgy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/c")
 target_compile_features(cfgy PUBLIC cxx_std_17)
 set_target_properties(cfgy PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON POSITION_INDEPENDENT_CODE ON)

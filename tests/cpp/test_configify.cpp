@@ -48,6 +48,15 @@ int main() {
     assert(second == 10 && dotted == 2);
 
     const auto math = cfgy::load("tests/conformance.cfgy");
+    assert(math["rotation"].as_list().size() == 3);
+    assert(std::abs(math["rotation"][1][2].as_float() - 1) < 1e-12);
+    assert(std::abs(math["rotated_y"][2].as_float() + 1) < 1e-12);
+    const auto matrices = cfgy::loads("a: matrix([[1, 2]])\nb: (a + a) * transpose(a)");
+    assert(matrices["b"][0][0].as_float() == 10.0);
+    const std::string draws = "seed: Rand.seed(7)\nx: Rand.uniform()\ny: Rand.int(1, 6)";
+    const auto random = cfgy::loads(draws);
+    assert(random["x"].as_float() == cfgy::loads(draws)["x"].as_float());
+    assert(random["y"].as_int() >= 1 && random["y"].as_int() <= 6);
     assert(math["absolute"][0].as_int() == 3 && math["absolute"][1].as_float() == 2.5);
     assert(math["angles"][0].as_float() == 1.0 && math["angles"][1].as_float() == 1.0);
     assert(math["angles"][2].as_float() == 0.0 && math["roots"][1].as_float() == 4.0);

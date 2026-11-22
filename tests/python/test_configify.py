@@ -27,6 +27,9 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(cfg.recording.pretrigger_samples, 400)
         self.assertEqual(cfg.recording.samples, 800)
         self.assertEqual(cfg.recording.interval_ms, 2.5)
+        pulse = cfg.simulation.sensor_pulse_m_s2[2] * 0.99
+        self.assertAlmostEqual(cfg.simulation.body_pulse_m_s2[0], pulse * math.sin(cfg.mount.tilt_rad))
+        self.assertAlmostEqual(cfg.simulation.body_pulse_m_s2[2], pulse * math.cos(cfg.mount.tilt_rad))
 
     def test_expressions(self):
         cfg = cfgy.load("tests/expressions.cfgy")
@@ -62,6 +65,88 @@ class ParserTests(unittest.TestCase):
                 cfgy.ConfigError, r"^test\.cfgy:\d+:\d+:"
             ):
                 cfgy.loads(text, source="test.cfgy")
+
+    def test_matrix_arithmetic(self):
+        cfg = cfgy.loads("""
+cal:
+  a: matrix([[1, 2, 3], [4, 5, 6]])
+alias: cal.a
+b: [[2, 0], [0, 1], [1, -1]]
+product: alias * b
+vector: alias * [2, 0, 1]
+scaled: 3 * alias / 2
+sum: alias + cal.a * 2
+difference: sum - alias
+negative: -alias
+joined: [[1, 2]] + [[3, 4]]
+row_product: [[1, 2]] * [[3], [4]]
+columns: transpose(alias)
+""")
+        self.assertEqual(cfg.product, [[5, -1], [14, -1]])
+        self.assertEqual(cfg.vector, [5, 14])
+        self.assertEqual(cfg.scaled, [[1.5, 3, 4.5], [6, 7.5, 9]])
+        self.assertEqual(cfg["sum"], [[3, 6, 9], [12, 15, 18]])
+        self.assertEqual(cfg.difference, [[2, 4, 6], [8, 10, 12]])
+        self.assertEqual(cfg.negative, [[-1, -2, -3], [-4, -5, -6]])
+        self.assertEqual(cfg.joined, [[1, 2], [3, 4]])
+        self.assertEqual(cfg.row_product, [[11]])
+        self.assertEqual(cfg.columns, [[1, 4], [2, 5], [3, 6]])
+        self.assertIs(type(cfg.alias[0][0]), float)
+
+    def test_rotation_conventions(self):
+        cfg = cfgy.load("tests/conformance.cfgy")
+        expected = [[1, 0, 0], [0, 0, 1], [0, -1, 0]]
+        for row, expected_row in zip(cfg.rotation, expected):
+            for actual, target in zip(row, expected_row):
+                self.assertAlmostEqual(actual, target)
+        for magnitude in ("1", "1e300", "1e-300"):
+            cfg = cfgy.loads(f"v: Rot.from_quat([0, 0, {magnitude}, {magnitude}]) * [1, 0, 0]")
+            self.assertEqual(cfg.v, [0, 1, 0])
+        # RPY applies roll, then pitch, then yaw to a column vector.
+        cfg = cfgy.loads("v: Rot.from_rpy(pi/2, pi/2, pi/2) * [0, 1, 0]")
+        for actual, target in zip(cfg.v, [0, 1, 0]):
+            self.assertAlmostEqual(actual, target)
+        cfg = cfgy.loads("Rot:\n  from_rpy: 7\nv: Rot.from_rpy")
+        self.assertEqual(cfg.v, 7)
+
+    def test_random_draws(self):
+        draws = """
+uniform: Rand.uniform(-3, 2)
+integer: Rand.int(-5, 3)
+normal: Rand.normal(10, 2)
+unit: Rand.uniform()
+standard: Rand.normal()
+alias: uniform
+"""
+        text = "seed: Rand.seed(1984)\n" + draws
+        cfg = cfgy.loads(text)
+        repeat = cfgy.loads(text)
+        for key in ("uniform", "integer", "normal", "unit", "standard"):
+            self.assertEqual(cfg[key], repeat[key])
+        self.assertNotEqual(cfg.uniform, cfgy.loads(text.replace("1984", "1985")).uniform)
+        for cfg in (cfg, cfgy.loads(draws)):
+            self.assertTrue(-3 <= cfg.uniform < 2 and 0 <= cfg.unit < 1)
+            self.assertTrue(-5 <= cfg.integer <= 3)
+            self.assertIs(type(cfg.integer), int)
+            self.assertTrue(math.isfinite(cfg.normal) and math.isfinite(cfg.standard))
+            self.assertEqual(cfg["alias"], cfg.uniform)
+        reset = cfgy.loads("s: Rand.seed(0)\na: Rand.uniform()\nt: Rand.seed(0)\nb: Rand.uniform()")
+        self.assertEqual(reset.a, reset.b)
+        self.assertEqual(cfgy.loads("x: Rand.int(-5, -5)").x, -5)
+
+    def test_invalid_matrix_rotation_and_random_arguments(self):
+        invalid = [
+            "matrix()", "matrix([])", "matrix([[]])", "matrix([[1], [2, 3]])",
+            "matrix([[true]])", "matrix([[1]]) + matrix([[1, 2]])",
+            "matrix([[1, 2]]) * matrix([[3, 4]])", "matrix([[1, 2]]) * [1]",
+            "matrix([[1]]) / 0", "matrix([[1e300]]) * 1e300",
+            "Rot.from_quat(0, 0, 0, 0)", "Rot.from_rpy(1, 2)", "Rot.from_quat([0, 0, 1, 'x'])",
+            "Rot.unknown()", "Rand.seed(1.5)", "Rand.uniform(1)", "Rand.uniform(1, 1)",
+            "Rand.normal(0, 0)", "Rand.int(3, 2)", "Rand.int(0, 1.5)",
+        ]
+        for expr in invalid:
+            with self.subTest(expr=expr), self.assertRaisesRegex(cfgy.ConfigError, r"^bad:1:\d+:"):
+                cfgy.loads("x: " + expr, "bad")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ sensor:
 mount:
   tilt_deg: 30
   tilt_rad: torad(tilt_deg)
+  sensor_to_body: Rot.from_rpy(0, tilt_rad, 0)
   resting_z_m_s2: 9.80665 * cos(tilt_rad)
 
 trigger:
@@ -23,3 +24,10 @@ recording:
   interval_ms: 1000 / sensor.rate_hz
   pretrigger_samples: sensor.rate_hz * before_trigger_s
   samples: sensor.rate_hz * duration_s
+
+# Apply calibration and mounting rotation to a simulated pulse along sensor Z.
+simulation:
+  seed: Rand.seed(42)
+  accel_gain: matrix([[1.01, 0, 0], [0, 1, 0], [0, 0, 0.99]])
+  sensor_pulse_m_s2: [0, 0, Rand.normal(2, 0.02)]
+  body_pulse_m_s2: mount.sensor_to_body * accel_gain * sensor_pulse_m_s2
