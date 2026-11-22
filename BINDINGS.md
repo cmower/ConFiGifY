@@ -40,9 +40,9 @@ C11's `cfgy_read` takes one literal map key per level. The output variable
 selects the type (`int64_t`, `double`, `bool`, or `cfgy_string`).
 
 ```c
-int64_t count;
-if (cfgy_read(cfg, &count, "c", "myel1")) {
-    printf("%" PRId64 "\n", count);
+int64_t samples;
+if (cfgy_read(cfg, &samples, "recording", "samples")) {
+    printf("%" PRId64 "\n", samples);
 }
 ```
 
@@ -78,8 +78,8 @@ top-level key. For nested keys, pass one key per level to
 `cfgy.Lookup`. Both forms support Go's usual presence check.
 
 ```go
-count, hasCount := cfgy.Lookup(cfg, "c", "myel1")
-gain, hasGain := cfg["myfloat2"]
+samples, hasSamples := cfgy.Lookup(cfg, "recording", "samples")
+intervalMS, hasInterval := cfgy.Lookup(cfg, "recording", "interval_ms")
 ```
 
 `cfgy.Load(path)` and `cfgy.Loads(text)` return `(map[string]any, error)`.
@@ -97,8 +97,8 @@ Pass one literal key per level to `Cfgy.lookup`. Use `cfg.get` for a top-level k
 
 ```java
 var cfg = Cfgy.load(Path.of(args[0]));
-System.out.println(Cfgy.lookup(cfg, "c", "myel1"));
-System.out.println(cfg.get("myfloat2"));
+System.out.println(Cfgy.lookup(cfg, "recording", "samples"));
+System.out.println(Cfgy.lookup(cfg, "recording", "interval_ms"));
 ```
 
 `io.configify.Cfgy.load(Path)` and `Cfgy.loads(String)` return `Map<String, Object>`.
@@ -132,8 +132,8 @@ configuration as `dynamic` to chain map keys and list indices at runtime.
 
 ```csharp
 dynamic cfg = Cfgy.Config.Load(path);
-long count = cfg["c"]["myel1"];
-double gain = cfg["myfloat2"];
+long samples = cfg["recording"]["samples"];
+double intervalMs = cfg["recording"]["interval_ms"];
 ```
 
 `Load(path)` and `Loads(text)` return a `Dictionary<string, object?>` with
@@ -174,13 +174,13 @@ Use one pair of braces per map key or one-based list index.
 
 ```matlab
 cfg = cfgy.load(path);
-disp(cfg{'c'}{'myel1'});   % 12
-disp(cfg{'myfloat2'});     % 9
-disp(cfg{'mylist1'}{1});   % 1
+disp(cfg{'recording'}{'samples'});       % 800
+disp(cfg{'recording'}{'interval_ms'});   % 2.5
+disp(cfg{'sensor'}{'channels'}{1});      % ax
 ```
 
 `cfgy.load(path)` and `cfgy.loads(text)` return a `cfgy.Config`, a
-`containers.Map` subclass. Standard map lookups such as `cfg('myfloat2')`
+`containers.Map` subclass. Standard map lookups such as `cfg('sensor')`
 also work. Lists are cell arrays, integers are `int64`, strings are character
 vectors, and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
 

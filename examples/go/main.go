@@ -16,11 +16,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	count, hasCount := cfgy.Lookup(cfg, "c", "myel1")
-	gain, hasGain := cfg["myfloat2"]
-	if !hasCount || !hasGain {
-		log.Fatal("expected c.myel1 and myfloat2")
+	samples, hasSamples := cfgy.Lookup(cfg, "recording", "samples")
+	intervalMS, hasInterval := cfgy.Lookup(cfg, "recording", "interval_ms")
+	if !hasSamples || !hasInterval {
+		log.Fatal("expected recording.samples and recording.interval_ms")
 	}
-	fmt.Println(count)
-	fmt.Println(gain)
+	fmt.Println(samples)
+	fmt.Println(intervalMS)
 }

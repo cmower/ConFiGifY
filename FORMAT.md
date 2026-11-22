@@ -13,10 +13,10 @@
   `\\`, `\"`, `\'`, `\n`, `\r`, and `\t`. A `#` outside quotes starts a line
   comment. Each expression fits on one line.
 - Bare names in values refer to previously defined keys. Lookup starts in the
-  current mapping and continues through its enclosing mappings. `c.myel1`
-  reads a field of an earlier mapping. Within `sensor`, an earlier sibling
-  field is available as `rate_hz`. Once the `sensor` block ends, later entries
-  can use `sensor.rate_hz`. The built-in names `true`, `false`,
+  current mapping and continues through its enclosing mappings. Within
+  `recording`, the earlier sibling `duration_s` is available by name. Once
+  the `sensor` block ends, later entries can use `sensor.rate_hz`.
+  The built-in names `true`, `false`,
   `null`, and `pi` take precedence when used as unqualified values.
 
 ## Expressions
@@ -25,7 +25,7 @@
 | --- | --- |
 | `12 * 2` | Integer `24` |
 | `2. + 7.` | Float `9.0` |
-| `[1, 2] + mylist1` | `[1, 2, 1, 3]` when `mylist1` is `[1, 3]` |
+| `["ax", "ay"] + ["az"]` | `["ax", "ay", "az"]` |
 | `torad(90)` | π/2 as a float |
 | `todeg(pi/2)` | `90.0` |
 | `torad(90, 0, 180)` | A list of three floats in argument order |
@@ -60,9 +60,9 @@ Python and C++ use the same bracket syntax after loading a file.
 
 | Lookup | Value in `examples/example.cfgy` |
 | --- | --- |
-| `cfg["myfloat2"]` | `9.0` |
-| `cfg["c"]["myel1"]` | `12` |
-| `cfg["mylist2"][0]` | `1` |
+| `cfg["recording"]["samples"]` | `800` |
+| `cfg["recording"]["interval_ms"]` | `2.5` |
+| `cfg["sensor"]["channels"][0]` | `"ax"` |
 
 Each string selects one literal key. For example, `cfg["a.b"]` reads the key
 named `a.b`, and `cfg["a"]["b"]` reads `b` inside `a`. List indices start at zero.

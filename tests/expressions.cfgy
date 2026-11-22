@@ -1,0 +1,19 @@
+myint: 12 * 2
+
+mylist1: [1, 3]
+mylist2: [1, 2] + mylist1
+myotherlist:
+  - "hello"
+  - "world"
+
+c:
+  myel1: 12
+  myel2: "nice"
+
+myfloat1: 12.0
+myfloat2: 2. + 7.
+
+a: torad(90)
+b: todeg(pi/2)
+
+rpy: torad(90, 0, 180)

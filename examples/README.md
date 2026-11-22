@@ -22,4 +22,9 @@ cmake --build build
 
 ## Expected output
 
-All three examples print `12` first. Python displays the float as `9.0`, and C and C++ display it as `9`.
+Each example prints the sample count, then the interval in milliseconds.
+
+```text
+800
+2.5
+```

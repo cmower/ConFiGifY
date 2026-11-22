@@ -8,7 +8,7 @@ if len(sys.argv) != 2:
 
 try:
     cfg = cfgy.load(sys.argv[1])
-    print(cfg["c"]["myel1"])
-    print(cfg["myfloat2"])
+    print(cfg["recording"]["samples"])
+    print(cfg["recording"]["interval_ms"])
 except (OSError, ValueError, TypeError, KeyError) as error:
     sys.exit(str(error))

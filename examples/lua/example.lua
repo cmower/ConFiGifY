@@ -1,4 +1,4 @@
 local cfgy = require("cfgy")
 local cfg = cfgy.load(assert(arg[1], "expected a configuration path"))
-print(cfg["c"]["myel1"])
-print(cfg["myfloat2"])
+print(cfg["recording"]["samples"])
+print(cfg["recording"]["interval_ms"])

@@ -21,6 +21,15 @@ class ParserTests(unittest.TestCase):
 
     def test_example(self):
         cfg = cfgy.load("examples/example.cfgy")
+        self.assertEqual(cfg.sensor.channels, ["ax", "ay", "az", "gx", "gy", "gz"])
+        self.assertAlmostEqual(cfg.mount.tilt_rad, math.pi / 6)
+        self.assertAlmostEqual(cfg.trigger.z_threshold_m_s2, 9.80665 * math.cos(math.pi / 6) + 2)
+        self.assertEqual(cfg.recording.pretrigger_samples, 400)
+        self.assertEqual(cfg.recording.samples, 800)
+        self.assertEqual(cfg.recording.interval_ms, 2.5)
+
+    def test_expressions(self):
+        cfg = cfgy.load("tests/expressions.cfgy")
         self.assertEqual(cfg.myint, 24)
         self.assertEqual(cfg.mylist1, [1, 3])
         self.assertEqual(cfg["mylist2"], [1, 2, 1, 3])

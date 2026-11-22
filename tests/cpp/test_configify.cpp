@@ -9,7 +9,7 @@
 #include <sstream>
 
 int main() {
-    const auto cfg = cfgy::load("examples/example.cfgy");
+    const auto cfg = cfgy::load("tests/expressions.cfgy");
     assert(cfg["myint"].as_int() == 24);
     const auto& first = cfg["mylist1"].as_list();
     assert(first.size() == 2 && first[0].as_int() == 1 && first[1].as_int() == 3);

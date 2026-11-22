@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
         return 2;
     }
     const auto cfg = cfgy::load(argv[1]);
-    const double gain = cfg["myfloat2"];
-    std::cout << cfg["c"]["myel1"] << '\n';
-    std::cout << gain << '\n';
+    const double interval_ms = cfg["recording"]["interval_ms"];
+    std::cout << cfg["recording"]["samples"] << '\n';
+    std::cout << interval_ms << '\n';
 }
