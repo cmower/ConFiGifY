@@ -110,10 +110,17 @@ julia --project=src/julia examples/julia/example.jl examples/example.cfgy
 
 ## C#
 
-Reference `src/csharp/Cfgy.csproj` from a .NET 8 project.
-`Cfgy.Config.Load(path)` and `Cfgy.Config.Loads(text)` return
-`Dictionary<string, object?>`. Nested lists are `object?[]`, integers are
-`long`, and parse errors throw `FormatException`.
+Reference `src/csharp/Cfgy.csproj` from a .NET 8 project. Declare the loaded
+configuration as `dynamic` to chain map keys and list indices at runtime.
+
+```csharp
+dynamic cfg = Cfgy.Config.Load(path);
+long count = cfg["c"]["myel1"];
+double gain = cfg["myfloat2"];
+```
+
+`Load(path)` and `Loads(text)` return a `Dictionary<string, object?>` with
+`object?[]` lists. Parse errors throw `FormatException`.
 
 ```sh
 dotnet run --project examples/csharp -- examples/example.cfgy
