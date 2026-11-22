@@ -33,7 +33,8 @@ simulation:
 Change `rate_hz` to `100` and the same two-second recording has 200 samples,
 10 ms apart. The last formula applies the calibration gains to the simulated
 pulse, then rotates it into the recorder’s coordinate frame. The [full example](examples/example.cfgy)
-also sets a trigger threshold. See the [format guide](FORMAT.md) for all operations.
+also sets a trigger threshold. The [documentation](https://cmower.github.io/ConFiGifY/)
+covers installation, the file format, and language bindings.
 
 ## Supported languages
 
