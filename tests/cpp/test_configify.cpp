@@ -47,7 +47,13 @@ int main() {
     int dotted = nested.at("a.b");
     assert(second == 10 && dotted == 2);
 
-    for (const auto* text : {"x: 1\nx: 2", "x: unknown", "x: 1/0", "x: [1] + 2",
+    const auto math = cfgy::load("tests/conformance.cfgy");
+    assert(math["absolute"][0].as_int() == 3 && math["absolute"][1].as_float() == 2.5);
+    assert(math["angles"][0].as_float() == 1.0 && math["angles"][1].as_float() == 1.0);
+    assert(math["angles"][2].as_float() == 0.0 && math["roots"][1].as_float() == 4.0);
+    assert(math["rounded"][0].as_float() == -2.0 && math["rounded"][1].as_float() == -1.0);
+    for (const auto* text : {"x: abs(-9223372036854775808)", "x: sqrt(-1)", "x: sin(true)",
+                             "x: abs()", "x: 1\nx: 2", "x: unknown", "x: 1/0", "x: [1] + 2",
                              "x: torad()", "x: [1, 2", "x: 2 *", "x: \"unfinished",
                              "x:\n  y: 1\n z: 2", "x: 9223372036854775807 + 1"}) {
         try {

@@ -193,15 +193,28 @@ private:
     }
 
     Value call(const Token& name) {
-        if (name.text != "torad" && name.text != "todeg") {
-            fail(source_, name, "unknown function '" + name.text + "'");
-        }
+        using Function = double (*)(double);
+        static const std::map<std::string, Function> functions = {
+            {"torad", [](double x) { return x * (pi / 180.0); }},
+            {"todeg", [](double x) { return x * (180.0 / pi); }},
+            {"abs", std::fabs}, {"sin", std::sin}, {"cos", std::cos}, {"tan", std::tan},
+            {"sqrt", std::sqrt}, {"floor", std::floor}, {"ceil", std::ceil}
+        };
+        const auto fn = functions.find(name.text);
+        if (fn == functions.end()) fail(source_, name, "unknown function '" + name.text + "'");
         auto args = arguments(")");
-        const double factor = name.text == "torad" ? pi / 180.0 : 180.0 / pi;
         if (args.empty()) fail(source_, name, name.text + " expects one or more numbers");
         for (auto& arg : args) {
             if (!is_number(arg)) fail(source_, name, name.text + " expects one or more numbers");
-            arg = finite(to_double(arg) * factor, name);
+            if (name.text == "abs" && std::holds_alternative<Integer>(arg.data)) {
+                const auto n = arg.as_int();
+                if (n == min_int) fail(source_, name, "integer out of range");
+                arg = Value{n < 0 ? -n : n};
+            } else {
+                const double result = fn->second(to_double(arg));
+                if (std::isnan(result)) fail(source_, name, name.text + " argument outside its domain");
+                arg = finite(result, name);
+            }
         }
         if (args.size() == 1) return std::move(args.front());
         return Value{std::move(args)};

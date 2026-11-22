@@ -27,6 +27,9 @@
 | `torad(90)` | π/2 as a float |
 | `todeg(pi/2)` | `90.0` |
 | `torad(90, 0, 180)` | A list of three floats in argument order |
+| `abs(-3, -2.5)` | `[3, 2.5]` |
+| `sin(torad(90))` | `1.0` |
+| `sqrt(9, 16)` | `[3.0, 4.0]` |
 
 The expression grammar, from lowest precedence to highest, is
 
@@ -42,8 +45,11 @@ arguments  = expression { "," expression }
 Binary operators associate to the left. Decimal integers are signed 64-bit.
 A decimal point or exponent produces a float, including in `.5`, `2.`, and
 `1e3`. Mixed numeric arithmetic and division produce floats. Two lists can be
-concatenated with `+`. The angle functions take one or more numeric arguments
-and return a float for one argument or a list for several. Division by zero,
+concatenated with `+`. Every math function takes one or more numeric arguments
+and returns one value for one argument or a list for several. `abs` preserves
+each argument's numeric type. `sin`, `cos`, and `tan` use radians. These
+functions and `torad`, `todeg`, `sqrt`, `floor`, and `ceil` return floats.
+The square root of a negative number is a domain error. Division by zero,
 numeric overflow, unknown names, and incompatible operands are errors.
 
 ## Reading values
