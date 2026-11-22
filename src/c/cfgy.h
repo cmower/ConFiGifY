@@ -1,6 +1,7 @@
 #ifndef CFGY_H
 #define CFGY_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -42,6 +43,23 @@ void cfgy_free(cfgy_document *document);
 /* Look up a NUL-terminated map key; returns NULL for a missing key or wrong kind.
    Iterate children[0..count) to inspect any key, including embedded NULs. */
 const cfgy_value *cfgy_get(const cfgy_value *map, const char *key);
+
+/* Read a scalar by following literal map keys from the document root.
+   Return 1 on success, or 0 on failure and leave the output untouched.
+   A double accepts integer and float values. Strings borrow document storage. */
+int cfgy_read_bool(const cfgy_document *doc, bool *out, const char *const keys[], size_t count);
+int cfgy_read_int64(const cfgy_document *doc, int64_t *out, const char *const keys[], size_t count);
+int cfgy_read_double(const cfgy_document *doc, double *out, const char *const keys[], size_t count);
+int cfgy_read_string(const cfgy_document *doc, cfgy_string *out, const char *const keys[], size_t count);
+
+#if !defined(__cplusplus) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+/* C11: cfgy_read(doc, &value, "section", "key") */
+#define cfgy_read(doc, out, ...) \
+    _Generic((out), bool *: cfgy_read_bool, int64_t *: cfgy_read_int64, \
+             double *: cfgy_read_double, cfgy_string *: cfgy_read_string)( \
+        (doc), (out), (const char *const[]){__VA_ARGS__}, \
+        sizeof((const char *const[]){__VA_ARGS__}) / sizeof(const char *))
+#endif
 
 #ifdef __cplusplus
 }

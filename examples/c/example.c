@@ -3,15 +3,26 @@
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-    if (argc != 2) return 2;
-    cfgy_document *doc = cfgy_load(argv[1]);
-    const char *error = cfgy_error(doc);
-    if (error) fprintf(stderr, "%s\n", error);
-    const cfgy_value *root = cfgy_root(doc);
-    const cfgy_value *count = cfgy_get(cfgy_get(root, "c"), "myel1");
-    const cfgy_value *gain = cfgy_get(root, "myfloat2");
-    int ok = count && count->kind == CFGY_INT && gain && gain->kind == CFGY_FLOAT;
-    if (ok) printf("%" PRId64 "\n%g\n", count->integer, gain->number);
-    cfgy_free(doc);
-    return ok ? 0 : 1;
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <config-file>\n", argv[0]);
+        return 2;
+    }
+
+    cfgy_document *cfg = cfgy_load(argv[1]);
+    const char *error = cfgy_error(cfg);
+    int64_t count;
+    double gain;
+    int status = 1;
+    if (error) {
+        fprintf(stderr, "%s\n", error);
+    } else if (!cfgy_read(cfg, &count, "c", "myel1")) {
+        fputs("Expected an integer at c.myel1\n", stderr);
+    } else if (!cfgy_read(cfg, &gain, "myfloat2")) {
+        fputs("Expected a number at myfloat2\n", stderr);
+    } else {
+        printf("%" PRId64 "\n%g\n", count, gain);
+        status = 0;
+    }
+    cfgy_free(cfg);
+    return status;
 }

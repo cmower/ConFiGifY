@@ -96,3 +96,46 @@ const cfgy_value* cfgy_get(const cfgy_value* map, const char* key) {
         });
     return found != end && std::string_view(found->key.data, found->key.size) == key ? found : nullptr;
 }
+
+static const cfgy_value* lookup_keys(const cfgy_document* doc, const char* const keys[], size_t count) {
+    if (!keys) return nullptr;
+    const cfgy_value* value = cfgy_root(doc);
+    for (size_t i = 0; i < count && value; ++i) {
+        value = cfgy_get(value, keys[i]);
+    }
+    return value;
+}
+
+int cfgy_read_bool(const cfgy_document* doc, bool* out, const char* const keys[], size_t count) {
+    const auto* value = lookup_keys(doc, keys, count);
+    if (!out || !value || value->kind != CFGY_BOOL) return 0;
+    *out = value->integer != 0;
+    return 1;
+}
+
+int cfgy_read_int64(const cfgy_document* doc, int64_t* out, const char* const keys[], size_t count) {
+    const auto* value = lookup_keys(doc, keys, count);
+    if (!out || !value || value->kind != CFGY_INT) return 0;
+    *out = value->integer;
+    return 1;
+}
+
+int cfgy_read_double(const cfgy_document* doc, double* out, const char* const keys[], size_t count) {
+    const auto* value = lookup_keys(doc, keys, count);
+    if (!out || !value) return 0;
+    if (value->kind == CFGY_FLOAT) {
+        *out = value->number;
+    } else if (value->kind == CFGY_INT) {
+        *out = static_cast<double>(value->integer);
+    } else {
+        return 0;
+    }
+    return 1;
+}
+
+int cfgy_read_string(const cfgy_document* doc, cfgy_string* out, const char* const keys[], size_t count) {
+    const auto* value = lookup_keys(doc, keys, count);
+    if (!out || !value || value->kind != CFGY_STRING) return 0;
+    *out = value->string;
+    return 1;
+}

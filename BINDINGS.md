@@ -35,13 +35,24 @@ also works. Syntax and evaluation errors raise `cfgy.ConfigError`.
 
 ## C and C++
 
-C uses `cfgy_load(path)` or `cfgy_parse(bytes, length, source)`. Check
-`cfgy_error(doc)` before reading `cfgy_root(doc)`. Child nodes and UTF-8 byte
-spans belong to that document. Call `cfgy_free(doc)` after the last lookup,
-including on error. The [C header](src/c/cfgy.h) defines the value types.
+In C, load the file with `cfgy_load(path)` and check `cfgy_error(cfg)`.
+C11's `cfgy_read` takes one literal map key per level. The output variable
+selects the type (`int64_t`, `double`, `bool`, or `cfgy_string`).
+
+```c
+int64_t count;
+if (cfgy_read(cfg, &count, "c", "myel1")) {
+    printf("%" PRId64 "\n", count);
+}
+```
+
+A read returns 1 on success. A missing key or incompatible type returns 0 and
+leaves the output untouched. A `double` accepts either an integer or a float.
+For lists and maps, use `cfgy_root`, `cfgy_get`, and the node's children.
+Strings and nodes belong to the document. Call `cfgy_free(cfg)` when finished,
+including on error. For in-memory input, use `cfgy_parse(bytes, length, source)`.
 
 ```sh
-cc -Isrc/c examples/c/example.c -Lbuild -lcfgy -o build/example-c
 ./build/example-c examples/example.cfgy
 ./build/example examples/example.cfgy
 ```
