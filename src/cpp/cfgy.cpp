@@ -2,7 +2,9 @@
 
 #include <charconv>
 #include <cmath>
+#ifdef _WIN32
 #include <filesystem>
+#endif
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -472,7 +474,11 @@ Value loads(const std::string& text, const std::string& source) {
 
 Value load(const std::string& path) {
     if (path.find('\0') != std::string::npos) throw ConfigError("NUL in file path");
+#ifdef _WIN32
     std::ifstream input(std::filesystem::u8path(path), std::ios::binary);
+#else
+    std::ifstream input(path, std::ios::binary);
+#endif
     if (!input) throw ConfigError(path + ": could not open file");
     return detail::materialize(Document(input, path).parse());
 }
