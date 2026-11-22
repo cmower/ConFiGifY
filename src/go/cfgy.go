@@ -76,3 +76,17 @@ func Load(path string) (map[string]any, error) {
 	}
 	return parse(data, path)
 }
+
+// Lookup follows one literal map key per level. It returns nil, false if a key
+// is missing or an intermediate value is not a map. A null value is nil, true.
+func Lookup(cfg map[string]any, key string, nested ...string) (any, bool) {
+	value, ok := cfg[key]
+	for _, key := range nested {
+		group, isMap := value.(map[string]any)
+		if !isMap {
+			return nil, false
+		}
+		value, ok = group[key]
+	}
+	return value, ok
+}

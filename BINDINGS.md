@@ -72,10 +72,17 @@ cargo run --manifest-path examples/rust/Cargo.toml -- examples/example.cfgy
 
 ## Go
 
-Import `github.com/cmower/ConFiGifY/src/go` as `cfgy`. `cfgy.Load(path)` and
-`cfgy.Loads(text)` return `(map[string]any, error)`. Integers are `int64`, lists
-are `[]any`, and nested maps are `map[string]any`. The example module uses
-a local `replace` directive.
+Import `github.com/cmower/ConFiGifY/src/go` as `cfgy`. Use brackets for a
+top-level key. For nested keys, pass one key per level to
+`cfgy.Lookup`. Both forms support Go's usual presence check.
+
+```go
+count, hasCount := cfgy.Lookup(cfg, "c", "myel1")
+gain, hasGain := cfg["myfloat2"]
+```
+
+`cfgy.Load(path)` and `cfgy.Loads(text)` return `(map[string]any, error)`.
+Integers are `int64` and lists are `[]any`.
 
 ```sh
 export CGO_LDFLAGS="-L$PWD/build"

@@ -21,3 +21,28 @@ func TestSharedFixture(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestLookup(t *testing.T) {
+	cfg, err := Loads("group:\n  'a.b': 7\n  a:\n    b: null\nnumber: 42")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range []struct {
+		keys  []string
+		value any
+		found bool
+	}{
+		{[]string{"number"}, int64(42), true},
+		{[]string{"group", "a.b"}, int64(7), true},
+		{[]string{"group", "a", "b"}, nil, true},
+		{[]string{"group", "missing"}, nil, false},
+		{[]string{"number", "child"}, nil, false},
+		{[]string{"group", "a", "b", "child"}, nil, false},
+	} {
+		value, found := Lookup(cfg, tc.keys[0], tc.keys[1:]...)
+		if value != tc.value || found != tc.found {
+			t.Errorf("Lookup(%q) = (%v, %t), want (%v, %t)", tc.keys, value, found, tc.value, tc.found)
+		}
+	}
+}
