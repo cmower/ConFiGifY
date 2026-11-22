@@ -39,7 +39,8 @@ struct cfgy_document {
             } else {
                 for (const auto& [key, child] : value.as_map()) {
                     children->key = {key.data(), key.size()};
-                    expose(child, *children++);
+                    expose(child, *children);
+                    ++children;
                 }
             }
         }

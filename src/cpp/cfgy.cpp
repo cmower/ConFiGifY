@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -35,6 +36,26 @@ using Line = std::vector<Token>;
 
 bool digit(char c) { return c >= '0' && c <= '9'; }
 bool letter(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
+
+// All bindings receive UTF-8 strings, including when a file is opened by C.
+void validate_utf8(std::string_view line, std::size_t number, const std::string& source) {
+    for (std::size_t i = 0; i < line.size();) {
+        const auto start = i;
+        const auto lead = static_cast<unsigned char>(line[i++]);
+        if (lead < 0x80) continue;
+        const auto invalid = [&] { fail(source, {"", "", number, start + 1}, "invalid UTF-8"); };
+        if (lead < 0xc2 || lead > 0xf4) invalid();
+        const std::size_t extra = lead < 0xe0 ? 1 : (lead < 0xf0 ? 2 : 3);
+        if (line.size() - i < extra) invalid();
+        const auto second = static_cast<unsigned char>(line[i]);
+        // Exclude overlong encodings, UTF-16 surrogates and values above U+10FFFF.
+        if ((lead == 0xe0 && second < 0xa0) || (lead == 0xed && second >= 0xa0) ||
+            (lead == 0xf0 && second < 0x90) || (lead == 0xf4 && second >= 0x90)) invalid();
+        for (std::size_t end = i + extra; i < end; ++i) {
+            if ((static_cast<unsigned char>(line[i]) & 0xc0) != 0x80) invalid();
+        }
+    }
+}
 
 Line lex_line(const std::string& line, std::size_t number, const std::string& source) {
     Line tokens;
@@ -102,6 +123,7 @@ std::vector<Line> read_lines(std::istream& input, const std::string& source) {
     std::string text;
     for (std::size_t n = 1; std::getline(input, text); ++n) {
         if (!text.empty() && text.back() == '\r') text.pop_back();
+        validate_utf8(text, n, source);
         Line row = lex_line(text, n, source);
         if (row.empty()) continue;
         // Split leading list markers so "- key: value" uses ordinary block parsing.
@@ -424,7 +446,8 @@ Value loads(const std::string& text, const std::string& source) {
 }
 
 Value load(const std::string& path) {
-    std::ifstream input(path);
+    if (path.find('\0') != std::string::npos) throw ConfigError("NUL in file path");
+    std::ifstream input(std::filesystem::u8path(path), std::ios::binary);
     if (!input) throw ConfigError(path + ": could not open file");
     return Document(input, path).parse();
 }

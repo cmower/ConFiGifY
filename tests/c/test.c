@@ -22,6 +22,10 @@ int main(int argc, char **argv) {
     cfgy_document *bad = cfgy_parse("x: sqrt(-1)", 11, "broken");
     assert(!cfgy_root(bad) && strstr(cfgy_error(bad), "broken:1:4:"));
     cfgy_free(bad);
+    const char invalid[] = "x: '\xed\xa0\x80'";
+    bad = cfgy_parse(invalid, sizeof(invalid) - 1, "bytes");
+    assert(cfgy_root(bad) == NULL && strstr(cfgy_error(bad), "invalid UTF-8"));
+    cfgy_free(bad);
     assert(wide->integer == INT64_C(9007199254740993));
     cfgy_free(doc);
     cfgy_free(NULL);
