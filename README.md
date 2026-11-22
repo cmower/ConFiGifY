@@ -119,3 +119,8 @@ Each badge shows the latest push run on `master` for that language and OS. Selec
 [rust-macos]: https://github.com/cmower/ConFiGifY/actions/workflows/rust-macos.yml?query=branch%3Amaster+event%3Apush
 [rust-windows-badge]: https://github.com/cmower/ConFiGifY/actions/workflows/rust-windows.yml/badge.svg?branch=master&event=push
 [rust-windows]: https://github.com/cmower/ConFiGifY/actions/workflows/rust-windows.yml?query=branch%3Amaster+event%3Apush
+
+## Contributing
+
+To contribute a new feature, [submit a pull request](https://github.com/cmower/ConFiGifY/compare).
+To report a problem, [open an issue](https://github.com/cmower/ConFiGifY/issues/new).
