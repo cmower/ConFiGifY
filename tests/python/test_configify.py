@@ -61,6 +61,52 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(cfg.rows[1].result, 10)
         self.assertEqual(cfgy.loads("a:\n  b: 2\nc: a.b + 1").c, 3)
 
+    def test_forward_references(self):
+        self.assertEqual(cfgy.loads("a: 2 * b\nb: 5").a, 10)
+        cfg = cfgy.loads("""
+n: 99
+rows:
+  - values: [n, abs(-limit), total]
+    n: 3
+total: config.base + 1
+config: (settings)
+settings:
+  limit_copy: config.limit
+  limit: base * 2
+  base: 5
+limit: settings.limit
+""")
+        self.assertEqual(cfg.rows[0]["values"], [3, 10, 6])
+        self.assertEqual((cfg.settings.limit_copy, cfg.config.base), (10, 5))
+
+    def test_forward_random_draw_is_evaluated_once(self):
+        cfg = cfgy.loads("""
+copies: [draw, draw]
+next_pair: Rand.uniform[seed]()
+draw: Rand.uniform[seed]()
+seed: Rand.seed(7)
+""")
+        ordered = cfgy.loads("seed: Rand.seed(7)\na: Rand.uniform[seed]()\nb: Rand.uniform[seed]()")
+        self.assertEqual(cfg.copies, [ordered.a, ordered.a])
+        self.assertEqual((cfg.draw, cfg.next_pair), (ordered.a, ordered.b))
+
+    def test_reference_errors(self):
+        for text in ["a: a", "a: b\nb: a", "a: 2 * b\nb: a + 1",
+                     "a: section.x\nsection:\n  x: [a]", "section:\n  self: section"]:
+            with self.subTest(text=text), self.assertRaisesRegex(
+                cfgy.ConfigError, r"^test\.cfgy:\d+:\d+: circular reference"
+            ):
+                cfgy.loads(text, "test.cfgy")
+        for text, error in [
+            ("a: b\nb: absent", "2:4: unknown reference 'absent'"),
+            ("a: group.absent\ngroup:\n  x: 5", "1:10: unknown field 'absent'"),
+            ("a: group.x\ngroup: 5", "1:10: unknown field 'x'"),
+            ("a: b\nb: 1 / 0", "2:6: division by zero"),
+        ]:
+            with self.subTest(text=text), self.assertRaises(cfgy.ConfigError) as caught:
+                cfgy.loads(text, "test.cfgy")
+            self.assertEqual(str(caught.exception), "test.cfgy:" + error)
+
     def test_invalid_input_reports_location(self):
         for text in ["x: 1\nx: 2", "x: unknown", "x: 1/0", "x: [1] + 2",
                      "x: torad()", "x: [1, 2", "x: 2 *", 'x: "unfinished',

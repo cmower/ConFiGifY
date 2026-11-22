@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <deque>
 #ifdef _WIN32
 #include <filesystem>
 #endif
@@ -19,15 +20,17 @@ namespace {
 using detail::Eval;
 using detail::Integer;
 using detail::pi;
-using Scopes = std::vector<const Eval::Map*>;
 constexpr auto min_int = std::numeric_limits<Integer>::min();
 constexpr auto max_int = std::numeric_limits<Integer>::max();
+
+struct Setting;
 
 struct Token {
     std::string kind;
     std::string text;
     std::size_t line;
     std::size_t column;
+    Setting* reference = nullptr;
 };
 
 using Line = std::vector<Token>;
@@ -149,11 +152,37 @@ int precedence(const std::string& op) {
     return 0;
 }
 
+// One graph per document. Mapping fields are indexed by name and inputs retain
+// source order for evaluating expressions with random draws.
+enum class Kind { expression, mapping, list, name, field };
+
+struct Setting {
+    Kind kind;
+    const Token& location;
+    Setting* scope;
+    std::vector<Setting*> inputs;
+    std::map<std::string, Setting*> fields;
+    Line expression;
+    Setting* target;  // Final definition after resolving aliases and dotted paths.
+    bool visiting = false;
+    std::size_t uses = 0;  // Move the cached value to its last consumer.
+    Eval result{nullptr};
+    bool evaluated = false;
+
+    Setting(Kind kind, const Token& location, Setting* scope)
+        : kind(kind), location(location), scope(scope),
+          target(kind == Kind::name || kind == Kind::field ? nullptr : this) {}
+};
+
+Eval take_value(Setting& definition) {
+    if (--definition.uses == 0) return std::move(definition.result);
+    return definition.result;
+}
+
 class Expression {
 public:
-    Expression(const Line& line, std::size_t start, const Scopes& scopes, const std::string& source,
-               detail::Random& random)
-        : line_(line), i_(start), scopes_(scopes), source_(source), random_(random) {}
+    Expression(const Line& line, const std::string& source, detail::Random& random)
+        : line_(line), source_(source), random_(random) {}
 
     Eval parse() {
         auto value = expression();
@@ -163,8 +192,7 @@ public:
 
 private:
     const Line& line_;
-    std::size_t i_;
-    const Scopes& scopes_;
+    std::size_t i_ = 0;
     const std::string& source_;
     detail::Random& random_;
 
@@ -261,36 +289,6 @@ private:
         return Eval{std::move(args)};
     }
 
-    Eval named(const Token& name) {
-        if (line_[i_].kind == "(") return call(name);
-        if (line_[i_].kind == "." && line_[i_ + 1].kind == "name" &&
-            (line_[i_ + 2].kind == "(" || line_[i_ + 2].kind == "[")) {
-            Token function = name;
-            function.text += "." + line_[i_ + 1].text;
-            i_ += 2;
-            return call(function);
-        }
-        static const Eval::Map constants = {
-            {"null", Eval{nullptr}}, {"true", Eval{true}}, {"false", Eval{false}}, {"pi", Eval{pi}}
-        };
-        const Eval* value = nullptr;
-        const auto constant = constants.find(name.text);
-        if (constant != constants.end()) value = &constant->second;
-        for (auto s = scopes_.rbegin(); !value && s != scopes_.rend(); ++s) {
-            const auto it = (*s)->find(name.text);
-            if (it != (*s)->end()) value = &it->second;
-        }
-        if (!value) fail(source_, name, "unknown reference '" + name.text + "'");
-        while (accept(".")) {
-            const auto& key = line_[i_];
-            require("name");
-            const auto* map = std::get_if<Eval::Map>(&value->data);
-            if (!map || !map->count(key.text)) fail(source_, key, "unknown field '" + key.text + "'");
-            value = &map->at(key.text);
-        }
-        return *value;
-    }
-
     Eval operand() {
         const auto& token = line_[i_];
         if (accept("+") || accept("-")) {
@@ -310,7 +308,8 @@ private:
         }
         if (accept("number")) return number(token);
         if (accept("string")) return Eval{token.text};
-        if (accept("name")) return named(token);
+        if (accept("function")) return call(token);
+        if (accept("reference")) return take_value(*token.reference->target);
         if (accept("[")) return Eval{arguments("]")};
         if (accept("(")) {
             auto value = expression();
@@ -384,16 +383,24 @@ public:
     Eval parse() {
         if (lines_.empty()) return Eval{Eval::Map{}};
         const auto& first = lines_.front();
-        if (first.front().column != 1 || !is_entry(first)) {
+        if (first.front().column != 1 || !is_entry(first))
             fail(source_, first.front(), "expected a top-level mapping");
+
+        auto& root = block(nullptr);
+        for (auto& setting : settings_) bind(setting);
+        for (auto& setting : settings_) {
+            if (setting.target == &setting) {
+                for (auto* input : setting.inputs) ++input->target->uses;
+            }
         }
-        return block();
+        evaluate(root);
+        return std::move(root.result);
     }
 
 private:
     std::vector<Line> lines_;
     const std::string& source_;
-    Scopes scopes_;
+    std::deque<Setting> settings_;
     detail::Random random_;
     std::size_t i_ = 0;
 
@@ -403,41 +410,176 @@ private:
 
     static bool is_item(const Line& line) { return line[0].kind == "-" && line[1].kind == "end"; }
 
-    Eval value(const Line& line, std::size_t start) {
-        if (line[start].kind != "end") return Expression(line, start, scopes_, source_, random_).parse();
-        if (i_ < lines_.size() && lines_[i_][0].column > line[0].column) return block();
-        return Eval{nullptr};
+    // Fold each name or dotted path into one token. A reference is bound after
+    // all mappings have been indexed. Function names use a separate namespace.
+    Setting& expression(const Line& line, std::size_t start, Setting* scope) {
+        Line tokens;
+        std::vector<Setting*> inputs;
+        for (std::size_t i = start; i < line.size(); ++i) {
+            tokens.push_back(line[i]);
+            if (line[i].kind != "name") continue;
+            auto& token = tokens.back();
+            if (line[i + 1].kind == "(") {
+                token.kind = "function";
+                continue;
+            }
+            if (line[i + 1].kind == "." && line[i + 2].kind == "name" &&
+                (line[i + 3].kind == "(" || line[i + 3].kind == "[")) {
+                token.kind = "function";
+                token.text += "." + line[i + 2].text;
+                i += 2;
+                continue;
+            }
+            auto* ref = &settings_.emplace_back(Kind::name, line[i], scope);
+            while (line[i + 1].kind == ".") {
+                if (line[i + 2].kind != "name") fail(source_, line[i + 2], "expected 'name'");
+                i += 2;
+                auto& field = settings_.emplace_back(Kind::field, line[i], scope);
+                field.inputs.push_back(ref);
+                ref = &field;
+            }
+            token.kind = "reference";
+            token.reference = ref;
+            inputs.push_back(ref);
+        }
+        // A (possibly parenthesized) alias can be followed to a mapping without
+        // evaluating all its fields just to read one of them.
+        std::size_t first = 0, end = tokens.size() - 1;
+        while (end - first >= 2 && tokens[first].kind == "(" && tokens[end - 1].kind == ")") {
+            ++first;
+            --end;
+        }
+        if (end - first == 1 && tokens[first].kind == "reference")
+            return *tokens[first].reference;
+        auto& setting = settings_.emplace_back(Kind::expression, line[start], scope);
+        setting.expression = std::move(tokens);
+        setting.inputs = std::move(inputs);
+        return setting;
     }
 
-    Eval block() {
+    Setting& value(const Line& line, std::size_t start, Setting* scope) {
+        if (line[start].kind != "end") return expression(line, start, scope);
+        if (i_ < lines_.size() && lines_[i_][0].column > line[0].column) return block(scope);
+        return settings_.emplace_back(Kind::expression, line[0], scope);  // Empty entry is null.
+    }
+
+    Setting& block(Setting* scope) {
         const auto& first = lines_[i_];
         const auto column = first[0].column;
         const bool mapping = is_entry(first);
         if (!mapping && !is_item(first)) {
             ++i_;
-            return Expression(first, 0, scopes_, source_, random_).parse();
+            return expression(first, 0, scope);
         }
-        Eval::Map fields;
-        Eval::List items;
-        if (mapping) scopes_.push_back(&fields);
+        auto& block = settings_.emplace_back(mapping ? Kind::mapping : Kind::list, first[0], scope);
         while (i_ < lines_.size() && lines_[i_][0].column >= column) {
             const auto& line = lines_[i_++];
             const auto& key = line[0];
             if (key.column != column) fail(source_, key, "unexpected indentation");
             if (mapping) {
                 if (!is_entry(line)) fail(source_, key, "expected a mapping entry");
-                if (fields.count(key.text)) fail(source_, key, "duplicate key '" + key.text + "'");
-                fields.emplace(key.text, value(line, 2));
+                if (block.fields.count(key.text)) fail(source_, key, "duplicate key '" + key.text + "'");
+                auto& child = value(line, 2, &block);
+                block.fields.emplace(key.text, &child);
+                block.inputs.push_back(&child);
             } else {
                 if (!is_item(line)) fail(source_, key, "expected a list item");
-                items.push_back(value(line, 1));
+                block.inputs.push_back(&value(line, 1, scope));
             }
         }
-        if (mapping) {
-            scopes_.pop_back();
-            return Eval{std::move(fields)};
+        return block;
+    }
+
+    Setting& lookup(Setting& name) {
+        static const Eval::Map constants = {
+            {"null", Eval{nullptr}}, {"true", Eval{true}}, {"false", Eval{false}}, {"pi", Eval{pi}}
+        };
+        const auto& key = name.location.text;
+        const auto constant = constants.find(key);
+        if (constant != constants.end()) {
+            name.result = constant->second;
+            name.evaluated = true;
+            name.target = &name;
+            return name;
         }
-        return Eval{std::move(items)};
+        for (auto* scope = name.scope; scope; scope = scope->scope) {
+            const auto it = scope->fields.find(key);
+            if (it != scope->fields.end()) return *it->second;
+        }
+        fail(source_, name.location, "unknown reference '" + key + "'");
+    }
+
+    [[noreturn]] void cycle(const Token& at) const {
+        fail(source_, at, "circular reference involving '" + at.text + "'");
+    }
+
+    // Resolve paths to definitions, descending through aliases one component at
+    // a time. A reference to group.x depends only on x, even within group.
+    void bind(Setting& start) {
+        if (start.target) return;
+        std::vector<Setting*> pending{&start};
+        start.visiting = true;
+        while (!pending.empty()) {
+            auto& ref = *pending.back();
+            Setting* next;
+            if (ref.kind == Kind::name) {
+                next = &lookup(ref);
+            } else {
+                next = ref.inputs.front();
+                if (next->target) {
+                    const auto& fields = next->target->fields;
+                    const auto it = fields.find(ref.location.text);
+                    if (it == fields.end())
+                        fail(source_, ref.location, "unknown field '" + ref.location.text + "'");
+                    next = it->second;
+                }
+            }
+            if (next->target) {
+                ref.target = next->target;
+                ref.visiting = false;
+                pending.pop_back();
+            } else {
+                if (next->visiting) cycle(ref.location);
+                next->visiting = true;
+                pending.push_back(next);
+            }
+        }
+    }
+
+    void evaluate(Setting& root) {
+        struct Frame { Setting& setting; std::size_t next_input = 0; };
+        std::vector<Frame> pending{{root}};
+        root.visiting = true;
+        while (!pending.empty()) {
+            auto& frame = pending.back();
+            auto& setting = frame.setting;
+            if (frame.next_input < setting.inputs.size()) {
+                auto* input = setting.inputs[frame.next_input++];
+                auto& definition = *input->target;
+                if (definition.visiting) cycle(input->location);
+                if (!definition.evaluated) {
+                    definition.visiting = true;
+                    pending.push_back({definition});
+                }
+                continue;
+            }
+            if (setting.kind == Kind::mapping) {
+                Eval::Map fields;
+                for (const auto& [key, field] : setting.fields)
+                    fields.emplace_hint(fields.end(), key, take_value(*field->target));
+                setting.result = Eval{std::move(fields)};
+            } else if (setting.kind == Kind::list) {
+                Eval::List items;
+                items.reserve(setting.inputs.size());
+                for (auto* item : setting.inputs) items.push_back(take_value(*item->target));
+                setting.result = Eval{std::move(items)};
+            } else if (!setting.expression.empty()) {
+                setting.result = Expression(setting.expression, source_, random_).parse();
+            }
+            setting.evaluated = true;
+            setting.visiting = false;
+            pending.pop_back();
+        }
     }
 };
 

@@ -2,7 +2,8 @@ wide: 9007199254740993
 label: "café 雪 😀"
 mixed: [null, true, false, 0, 2.5, "six", []]
 group:
-  "a.b": 7
+  "a.b": base + 2
+  base: 5
 absolute: abs(-3, -2.5, 0)
 angles: [sin(torad(90)), cos(0), tan(0)]
 roots: sqrt(9, 16)
