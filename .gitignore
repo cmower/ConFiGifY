@@ -9,3 +9,5 @@ __pycache__/
 .venv/
 *.egg-info/
 /dist/
+/src/python/_cfgy*.so
+/src/python/_cfgy*.pyd

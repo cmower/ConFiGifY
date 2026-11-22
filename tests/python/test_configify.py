@@ -5,6 +5,20 @@ import cfgy
 
 
 class ParserTests(unittest.TestCase):
+    def test_native_math_and_values(self):
+        cfg = cfgy.load("tests/conformance.cfgy")
+        self.assertEqual(cfg.absolute, [3, 2.5, 0])
+        self.assertIs(type(cfg.absolute[0]), int)
+        self.assertEqual(cfg.angles, [1.0, 1.0, 0.0])
+        self.assertEqual(cfg.roots, [3.0, 4.0])
+        self.assertEqual(cfg.wide, 9007199254740993)
+        self.assertEqual(cfg.label, "café 雪 😀")
+        self.assertEqual(cfg.mixed, [None, True, False, 0, 2.5, "six", []])
+        self.assertEqual(cfg.group["a.b"], 7)
+        self.assertEqual(cfgy.loads('s: "a\x00b"').s, "a\x00b")
+        with self.assertRaisesRegex(cfgy.ConfigError, "bad:1:4:"):
+            cfgy.loads("x: sqrt(-1)", "bad")
+
     def test_example(self):
         cfg = cfgy.load("example.cfgy")
         self.assertEqual(cfg.myint, 24)
