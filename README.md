@@ -1,13 +1,14 @@
 # ![ConFiGifY](doc/_static/configify.svg)
 
-ConFiGifY lets you write formulas alongside ordinary settings in a YAML-style
-`.cfgy` file. Formulas can use earlier settings by name. When your application
-loads the file, it gets the calculated values.
+ConFiGifY lets you write formulas alongside ordinary settings in a `.cfgy` file.
+YAML inspired its indentation and key-value syntax, but the two formats are
+incompatible. When your application loads the file, ConFiGifY resolves references
+to earlier settings and evaluates the formulas.
 
 This example configures a six-axis motion recorder and simulates a test pulse
 along the accelerometer’s Z axis.
 
-```yaml
+```text
 sensor:
   rate_hz: 400
   accel_channels: ["ax", "ay", "az"]

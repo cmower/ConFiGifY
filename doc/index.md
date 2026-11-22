@@ -1,14 +1,15 @@
 # Getting started
 
-ConFiGifY evaluates formulas when your application loads a YAML-style `.cfgy` file.
-Define a setting once and refer to it by name wherever you need it.
+ConFiGifY evaluates formulas when your application loads a `.cfgy` file.
+Its indentation is inspired by YAML. The two formats are incompatible, so use
+the ConFiGifY parser to read `.cfgy` files.
 
 ## Write a configuration
 
 In the root of a [ConFiGifY checkout](https://github.com/cmower/ConFiGifY),
 save this as `recorder.cfgy`.
 
-```yaml
+```text
 sensor:
   rate_hz: 400
 

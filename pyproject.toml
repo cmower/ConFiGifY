@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cfgy"
 version = "0.1.0"
-description = "YAML-style configuration with arithmetic, references, and angle conversions"
+description = "A configuration format inspired by YAML, with references, arithmetic, and matrix operations"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"

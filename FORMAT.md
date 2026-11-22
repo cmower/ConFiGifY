@@ -1,5 +1,9 @@
 # ConFiGifY file format
 
+ConFiGifY borrows indentation and `key: value` syntax from YAML. The formats
+are incompatible. For example, ConFiGifY evaluates `samples: 2 * 400` as the
+integer `800`. A YAML parser reads that expression as a string.
+
 - A UTF-8 document contains one top-level mapping. Each entry begins with
   `key:`. Indent child blocks with spaces and align siblings at the same column.
   An empty document produces an empty mapping. An entry with no value or child
@@ -62,7 +66,7 @@ numeric overflow, unknown names, and incompatible operands are errors.
 Matrix arithmetic uses double precision. Each binding returns the result as a
 list of rows, so existing key and list indexing works.
 
-```yaml
+```text
 a: matrix([[1, 2], [3, 4]])
 b: 2 * a
 sum: a + b                 # [[3, 6], [9, 12]]
@@ -79,7 +83,7 @@ Plain row lists can be used directly for products or subtraction. For addition,
 wrap at least one operand in `matrix(...)` to select elementwise addition.
 Two plain lists joined with `+` always concatenate.
 
-```yaml
+```text
 rpy: [90, 0, 180]
 rotation: Rot.from_rpy(rpy) * Rot.from_quat(0, 0, 1, 0)
 direction: rotation * [0, 1, 0]  # approximately [0, 0, -1]
@@ -94,7 +98,7 @@ component last. In `A * B * v`, rotation `B` acts on the vector first.
 
 ## Random numbers
 
-```yaml
+```text
 seed1: Rand.seed(42)
 seed2: Rand.seed(12)
 random_number: Rand.uniform[seed1](-1, 1)  # two floats

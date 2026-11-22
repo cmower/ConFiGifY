@@ -8,7 +8,7 @@ models an accelerometer pulse and converts it to the recorder's coordinate frame
 {download}`Download example.cfgy <../examples/example.cfgy>`
 
 ```{literalinclude} ../examples/example.cfgy
-:language: yaml
+:language: text
 ```
 
 `Rand.uniform[noise_seed]` supplies two lateral noise values. Appending `[2]`
