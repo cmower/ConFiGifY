@@ -18,7 +18,8 @@ recording:
 
 Change `rate_hz` to `100` and the next load gives you a 10 ms interval and 200 samples.
 The full [example.cfgy](examples/example.cfgy) also combines six sensor channels
-and calculates the trigger threshold from the sensor's mounting angle.
+and rotates a simulated acceleration pulse from sensor to body coordinates.
+The [format guide](FORMAT.md) describes matrix arithmetic, rotations, and seeded random draws.
 
 ## Supported languages
 
