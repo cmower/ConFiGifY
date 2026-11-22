@@ -53,12 +53,9 @@ arguments  = expression { "," expression }
 Binary operators associate to the left. Decimal integers are signed 64-bit.
 A decimal point or exponent produces a float, including in `.5`, `2.`, and
 `1e3`. Mixed numeric arithmetic and division produce floats. Two lists can be
-concatenated with `+`. The scalar math functions above take one or more numeric arguments
-and returns one value for one argument or a list for several. `abs` preserves
-each argument's numeric type. `sin`, `cos`, and `tan` use radians. These
-functions and `torad`, `todeg`, `sqrt`, `floor`, and `ceil` return floats.
-The square root of a negative number is a domain error. Division by zero,
-numeric overflow, unknown names, and incompatible operands are errors.
+concatenated with `+`. Division by zero, numeric overflow, unknown names, and
+incompatible operands are errors. The [built-in function reference](doc/functions.md)
+lists every function, its arguments, and its return type.
 
 ## Matrices and rotations
 
@@ -111,13 +108,6 @@ random_number: Rand.uniform[seed1](-1, 1)  # two floats
 noise: Rand.normal[seed2](0, 0.02)
 next_pair: Rand.uniform[seed1](-1, 1)
 ```
-
-| Call | Result |
-| --- | --- |
-| `Rand.uniform(low, high)` | Float in `[low, high)`, with `low < high`. Defaults to `[0, 1)`. |
-| `Rand.normal(mean, stddev)` | Normal draw with positive standard deviation. Defaults to mean 0 and standard deviation 1. |
-| `Rand.int(low, high)` | Integer from `low` through `high`, inclusive. Both bounds must be integers. |
-| `Rand.seed(n)` | Creates a stream, resets the default generator to `n`, and exposes the integer seed to your application. |
 
 `Rand.uniform[seed](...)`, `Rand.normal[seed](...)`, and `Rand.int[seed](...)`
 each return a list of two consecutive draws from that stream. In the example,

@@ -51,6 +51,7 @@ For C, C++, C#, Go, Java, Julia, Lua, MATLAB, Octave, and Rust, see
 
 Getting started <self>
 File format <format>
+Built-in functions <functions>
 Language bindings <bindings>
 Worked example <example>
 ```
