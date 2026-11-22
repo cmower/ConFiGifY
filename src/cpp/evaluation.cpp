@@ -165,7 +165,9 @@ Eval matrix_operation(char op, Eval left, Eval right) {
 
 Eval rotation(std::string_view name, const Eval::List& args) {
     if (name == "Rot.from_rpy") {
-        const auto [roll, pitch, yaw] = components<3>(args, name);
+        auto angles = components<3>(args, name);
+        for (double& angle : angles) angle = to_radians(angle);
+        const auto [roll, pitch, yaw] = angles;
         const double cr = std::cos(roll), sr = std::sin(roll);
         const double cp = std::cos(pitch), sp = std::sin(pitch);
         const double cy = std::cos(yaw), sy = std::sin(yaw);

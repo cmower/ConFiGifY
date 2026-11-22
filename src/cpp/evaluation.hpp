@@ -9,6 +9,8 @@ namespace cfgy::detail {
 
 using Integer = std::int64_t;
 using Matrix = std::vector<std::vector<double>>;
+inline constexpr double pi = 3.14159265358979323846;
+inline double to_radians(double degrees) { return degrees * (pi / 180.0); }
 
 // A matrix retains its arithmetic meaning through references during evaluation.
 // At the binding boundary it becomes an ordinary list of rows.

@@ -7,6 +7,6 @@ absolute: abs(-3, -2.5, 0)
 angles: [sin(torad(90)), cos(0), tan(0)]
 roots: sqrt(9, 16)
 rounded: [floor(-1.25), ceil(-1.25)]
-rpy: torad(90, 0, 180)
+rpy: [90, 0, 180]
 rotation: Rot.from_rpy(rpy) * Rot.from_quat(0, 0, 1, 0)
 rotated_y: rotation * [0, 1, 0]

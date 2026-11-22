@@ -20,7 +20,7 @@ recording:
   samples: sensor.rate_hz * duration_s   # 800 samples
 
 mount:
-  sensor_to_body: Rot.from_rpy(0, torad(30), 0)
+  sensor_to_body: Rot.from_rpy(0, 30, 0)
 
 simulation:
   seed: Rand.seed(42)

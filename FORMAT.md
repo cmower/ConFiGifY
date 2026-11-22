@@ -79,14 +79,15 @@ wrap at least one operand in `matrix(...)` to select elementwise addition.
 Two plain lists joined with `+` always concatenate.
 
 ```yaml
-rpy: torad(90, 0, 180)
+rpy: [90, 0, 180]
 rotation: Rot.from_rpy(rpy) * Rot.from_quat(0, 0, 1, 0)
 direction: rotation * [0, 1, 0]  # approximately [0, 0, -1]
 ```
 
 Both constructors accept separate components or a single list and return a
-3×3 matrix. `Rot.from_rpy(roll, pitch, yaw)` takes angles in radians and
+3×3 matrix. `Rot.from_rpy(roll, pitch, yaw)` takes angles in degrees and
 computes the active, right-handed rotation `Rz(yaw) * Ry(pitch) * Rx(roll)`.
+For angles already in radians, use `Rot.from_rpy(todeg(roll, pitch, yaw))`.
 `Rot.from_quat(x, y, z, w)` normalizes a nonzero quaternion with the scalar
 component last. In `A * B * v`, rotation `B` acts on the vector first.
 

@@ -9,7 +9,7 @@ sensor:
 mount:
   tilt_deg: 30
   tilt_rad: torad(tilt_deg)
-  sensor_to_body: Rot.from_rpy(0, tilt_rad, 0)
+  sensor_to_body: Rot.from_rpy(0, tilt_deg, 0)
   resting_z_m_s2: 9.80665 * cos(tilt_rad)
 
 trigger:

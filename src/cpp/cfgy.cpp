@@ -18,10 +18,10 @@ namespace {
 
 using detail::Eval;
 using detail::Integer;
+using detail::pi;
 using Scopes = std::vector<const Eval::Map*>;
 constexpr auto min_int = std::numeric_limits<Integer>::min();
 constexpr auto max_int = std::numeric_limits<Integer>::max();
-const double pi = std::acos(-1.0);
 
 struct Token {
     std::string kind;
@@ -213,7 +213,7 @@ private:
     Eval call(const Token& name) {
         using Function = double (*)(double);
         static const std::map<std::string, Function> functions = {
-            {"torad", [](double x) { return x * (pi / 180.0); }},
+            {"torad", detail::to_radians},
             {"todeg", [](double x) { return x * (180.0 / pi); }},
             {"abs", std::fabs}, {"sin", std::sin}, {"cos", std::cos}, {"tan", std::tan},
             {"sqrt", std::sqrt}, {"floor", std::floor}, {"ceil", std::ceil}

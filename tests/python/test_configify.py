@@ -103,7 +103,7 @@ columns: transpose(alias)
             cfg = cfgy.loads(f"v: Rot.from_quat([0, 0, {magnitude}, {magnitude}]) * [1, 0, 0]")
             self.assertEqual(cfg.v, [0, 1, 0])
         # RPY applies roll, then pitch, then yaw to a column vector.
-        cfg = cfgy.loads("v: Rot.from_rpy(pi/2, pi/2, pi/2) * [0, 1, 0]")
+        cfg = cfgy.loads("v: Rot.from_rpy(90, 90, 90) * [0, 1, 0]")
         for actual, target in zip(cfg.v, [0, 1, 0]):
             self.assertAlmostEqual(actual, target)
         cfg = cfgy.loads("Rot:\n  from_rpy: 7\nv: Rot.from_rpy")
