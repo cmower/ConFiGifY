@@ -13,6 +13,33 @@ install(FILES src/c/cfgy.h src/cpp/cfgy DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}
 add_executable(example examples/cpp/example.cpp)
 target_link_libraries(example PRIVATE cfgy)
 
+option(CFGY_JAVA "Build the Java jar and JNI module" OFF)
+if(CFGY_JAVA)
+    find_package(Java REQUIRED COMPONENTS Development)
+    find_package(JNI REQUIRED)
+    include(UseJava)
+    add_library(cfgy_jni SHARED src/java/jni.c)
+    target_include_directories(cfgy_jni PRIVATE ${JNI_INCLUDE_DIRS})
+    target_link_libraries(cfgy_jni PRIVATE cfgy)
+    add_jar(cfgy_java src/java/io/configify/Cfgy.java OUTPUT_NAME cfgy)
+endif()
+
+option(CFGY_LUA "Build the Lua module" OFF)
+if(CFGY_LUA)
+    find_package(Lua 5.3 REQUIRED)
+    add_library(cfgy_lua MODULE src/lua/cfgy_lua.c)
+    target_include_directories(cfgy_lua PRIVATE ${LUA_INCLUDE_DIR})
+    target_link_libraries(cfgy_lua PRIVATE cfgy ${LUA_LIBRARIES})
+    set_target_properties(cfgy_lua PROPERTIES PREFIX "" OUTPUT_NAME cfgy
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lua" WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+option(CFGY_MATLAB "Build the MATLAB MEX module" OFF)
+if(CFGY_MATLAB)
+    find_package(Matlab REQUIRED)
+    matlab_add_mex(NAME cfgy_native SRC src/matlab/native.c LINK_TO cfgy)
+endif()
+
 option(BUILD_TESTING "Build the C++ parser tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
