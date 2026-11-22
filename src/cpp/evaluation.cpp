@@ -120,10 +120,14 @@ Eval apply_vector(const Matrix& matrix, const Eval::List& vector) {
     return Eval{std::move(result)};
 }
 
+const Eval::List& component_values(const Eval::List& args) {
+    const auto* list = args.size() == 1 ? std::get_if<Eval::List>(&args.front().data) : nullptr;
+    return list ? *list : args;
+}
+
 template<std::size_t N>
 std::array<double, N> components(const Eval::List& args, std::string_view name) {
-    const auto* list = args.size() == 1 ? std::get_if<Eval::List>(&args.front().data) : nullptr;
-    const auto& values = list ? *list : args;
+    const auto& values = component_values(args);
     if (values.size() != N)
         throw std::domain_error(std::string(name) + " expects " + std::to_string(N) + " numeric components");
     std::array<double, N> result;
@@ -140,6 +144,16 @@ bool is_matrix_operand(const Eval& value) {
 Matrix as_matrix(Eval value) {
     if (auto* matrix = std::get_if<Matrix>(&value.data)) return std::move(*matrix);
     return read_rows(value);
+}
+
+Matrix diagonal(const Eval::List& args) {
+    const auto& entries = component_values(args);
+    if (entries.empty() || !std::all_of(entries.begin(), entries.end(), is_number))
+        throw std::domain_error("diag expects one or more numbers or a nonempty list of numbers");
+    const auto size = entries.size();
+    Matrix result(size, std::vector<double>(size, 0.0));
+    for (std::size_t i = 0; i < size; ++i) result[i][i] = to_double(entries[i]);
+    return result;
 }
 
 Matrix transpose(const Matrix& matrix) {

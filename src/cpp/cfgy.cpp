@@ -259,6 +259,7 @@ private:
         require("(");
         auto args = arguments(")");
         try {
+            if (name.text == "diag") return Eval{detail::diagonal(args)};
             if (name.text == "matrix" || name.text == "transpose") {
                 if (args.size() != 1) fail(source_, name, name.text + " expects one matrix or list of rows");
                 auto matrix = detail::as_matrix(std::move(args.front()));

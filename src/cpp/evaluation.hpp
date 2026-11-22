@@ -32,6 +32,7 @@ bool is_number(const Eval& value);
 double to_double(const Eval& value);
 bool is_matrix_operand(const Eval& value);
 Matrix as_matrix(Eval value);
+Matrix diagonal(const Eval::List& args);
 Matrix transpose(const Matrix& matrix);
 Eval matrix_operation(char op, Eval left, Eval right);
 Eval rotation(std::string_view name, const Eval::List& args);

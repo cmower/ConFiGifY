@@ -145,6 +145,22 @@ columns: transpose(alias)
         self.assertEqual(cfg.columns, [[1, 4], [2, 5], [3, 6]])
         self.assertIs(type(cfg.alias[0][0]), float)
 
+    def test_diagonal_matrix(self):
+        cfg = cfgy.loads("""
+gain: diag(x, 0, z / 2)
+from_list: diag(entries)
+applied: gain @ [2, 3, 4]
+single: diag(7)
+x: -1.5
+z: 5
+entries: [x, 0, z / 2]
+""")
+        self.assertEqual(cfg.gain, [[-1.5, 0, 0], [0, 0, 0], [0, 0, 2.5]])
+        self.assertEqual(cfg.from_list, cfg.gain)
+        self.assertEqual(cfg.applied, [-3, 0, 10])
+        self.assertEqual(cfg.single, [[7.0]])
+        self.assertIs(type(cfg.single[0][0]), float)
+
     def test_matrix_product_operators(self):
         cfg = cfgy.loads("""
 a: [[1, 2], [3, 4]]
@@ -246,6 +262,7 @@ standard: [Rand.normal(), Rand.normal()]
 
     def test_invalid_matrix_rotation_and_random_arguments(self):
         invalid = [
+            "diag()", "diag([])", "diag(true)", "diag(1, 'x')", "diag([[1, 2]])", "diag([1], 2)",
             "matrix()", "matrix([])", "matrix([[]])", "matrix([[1], [2, 3]])",
             "matrix([[true]])", "matrix([[1]]) + matrix([[1, 2]])",
             "[[1, 2]] * [[3], [4]]", "[[1, 2]] @ [[3, 4]]", "matrix([[1, 2]]) * [1, 2]",

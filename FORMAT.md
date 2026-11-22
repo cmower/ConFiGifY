@@ -83,6 +83,9 @@ product: a @ b               # [[19, 22], [43, 50]]
 vector: transpose(a) @ [1, 0]  # [1, 2]
 ```
 
+Use `diag(2, 3, 4)` for per-axis gains. For example, `diag(2, 3, 4) @ [1, 2, 3]`
+gives `[2, 6, 12]`.
+
 For two matrices, `*` multiplies corresponding entries and requires equal
 shapes. With `@`, an *m × n* matrix times an *n × p* matrix produces an
 *m × p* matrix. A flat numeric list on the right of `@` acts as a column

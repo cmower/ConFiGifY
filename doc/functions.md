@@ -25,6 +25,7 @@ arguments return a flat list in argument order. Results are floats except for
 | Function | Arguments and result |
 | --- | --- |
 | `matrix(rows)` | Creates a matrix from a nonempty list of equal-length, nonempty numeric rows. |
+| `diag(x, ...)` | Takes one or more numbers or a single nonempty list of numbers. Returns a square matrix with those values on the main diagonal and zeros elsewhere. |
 | `transpose(a)` | Swaps rows and columns of a matrix or rectangular list of rows. |
 | `Rot.from_rpy(roll, pitch, yaw)` | Takes three angles **in degrees**, or a single list of three angles. Returns the 3 × 3 rotation that applies roll, then pitch, then yaw. |
 | `Rot.from_quat(x, y, z, w)` | Takes four components, or a single list in **xyzw** order. Normalizes the nonzero quaternion and returns a 3 × 3 rotation matrix. |
