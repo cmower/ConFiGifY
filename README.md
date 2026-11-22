@@ -1,9 +1,28 @@
 # ConFiGifY
 
-YAML-style configuration with arithmetic, references, and math functions.
-One C++ evaluator powers the [bindings for Python, C, Rust, Go, Java, Julia, C#, Lua, and MATLAB](BINDINGS.md).
+ConFiGifY lets you define a setting once and reuse it in expressions inside a
+YAML-style `.cfgy` file. For example, a sensor's sample rate can determine both
+the time between readings and the number of samples to collect.
+
+```yaml
+sensor:
+  rate_hz: 200
+  duration_s: 2
+  interval_ms: 1000 / rate_hz     # 5.0
+  samples: rate_hz * duration_s   # 400
+```
+
+Change `rate_hz` to `100` and the next load gives you a 10 ms interval and 200 samples.
+
+## Supported languages
+
+Use the same file in **C, C++, C#, Go, Java, Julia, Lua, MATLAB, Python, and Rust**.
+All ten use the same evaluator, so a Python analysis and a C++ application get
+the same values. [Setup and examples by language](BINDINGS.md)
 
 ## Python 3.9+
+
+The Python and C++ quick starts below read the bundled [example.cfgy](examples/example.cfgy).
 
 ```python
 import sys
