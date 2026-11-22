@@ -186,6 +186,12 @@ vectors, and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
 
 ## Conformance checks
 
+GitHub Actions runs each binding's tests on Linux, macOS, and Windows for
+pull requests targeting `master` and for each push to `master`. The
+[status table](README.md#supported-languages) shows the push results. To test
+a branch manually, open **Actions**, choose a language and OS, then select
+**Run workflow** and the branch.
+
 The fixtures in `tests/` check numeric types, Unicode, nested keys, mixed
 lists, nulls, and math errors against the same core. With the relevant bindings
 built and the environment variables above set, run their checks from the root.
