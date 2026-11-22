@@ -16,12 +16,24 @@ integer `800`. A YAML parser reads that expression as a string.
 - Write literal text in single or double quotes. Both styles accept the escapes
   `\\`, `\"`, `\'`, `\n`, `\r`, and `\t`. A `#` outside quotes starts a line
   comment. Each expression fits on one line.
-- Bare names in values refer to previously defined keys. Lookup starts in the
-  current mapping and continues through its enclosing mappings. Within
-  `recording`, the earlier sibling `duration_s` is available by name. Once
-  the `sensor` block ends, later entries can use `sensor.rate_hz`.
-  The built-in names `true`, `false`,
-  `null`, and `pi` take precedence when used as unqualified values.
+
+## References
+
+A setting can refer to a key defined before or after it.
+
+```text
+a: 2 * b  # 10
+b: 5
+```
+
+Lookup starts in the current mapping and continues through its enclosing
+mappings. The nearest definition wins, even if it appears later. Use a dotted
+path such as `sensor.rate_hz` to read a nested field. The built-in names
+`true`, `false`, `null`, and `pi` take precedence when used on their own.
+
+The parser visits settings in file order and evaluates each setting's dependencies
+first. It evaluates each setting once, so two references to the same random draw
+return the same value. An unknown name or a circular reference is a load error.
 
 ## Expressions
 

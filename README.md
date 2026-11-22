@@ -1,8 +1,9 @@
 # ![ConFiGifY](doc/_static/configify.svg)
 
 ConFiGifY is a configuration file specification for defining settings with
-literal values and formulas. Formulas can reference earlier settings in the same
-`.cfgy` file. The parser evaluates them when your application loads the file.
+literal values and formulas. Formulas can reference settings defined before or
+after them in the same `.cfgy` file. The parser evaluates them when your
+application loads the file.
 
 ConFiGifY borrows indentation and key-value syntax from YAML. The two formats
 are incompatible.
