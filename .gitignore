@@ -9,3 +9,5 @@ __pycache__/
 *.py[co]
 .pytest_cache/
 .venv/
+*.egg-info/
+/dist/

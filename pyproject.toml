@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cfgy"
+version = "0.1.0"
+description = "YAML-style configuration with arithmetic, references, and angle conversions"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{name = "Christopher E. Mower"}]
+
+[tool.setuptools]
+package-dir = {"" = "src/python"}
+py-modules = ["cfgy"]
