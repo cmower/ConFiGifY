@@ -5,5 +5,5 @@ cd "$project_dir"
 test_dir=$(mktemp -d)
 trap 'rm -rf "$test_dir"' EXIT
 cmake -S . -B "$test_dir" -DBUILD_TESTING=ON
-cmake --build "$test_dir" --target cfgy-test
+cmake --build "$test_dir"
 (cd "$test_dir" && ctest --output-on-failure)

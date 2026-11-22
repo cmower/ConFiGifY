@@ -3,7 +3,6 @@
 #endif
 
 #include <cfgy>
-#include "example_config.hpp"
 #include "test_config.hpp"
 
 #include <cassert>
@@ -35,12 +34,12 @@ int main() {
         assert(std::string(error.what()) == "changed.cfgy: type mismatch at c.myel1");
     }
 
-    const auto runtime = cfgy::loads<ExampleConfig>("myfloat2: .25\nc:\n  myel1: 61 + 2");
-    int count = runtime.c.myel1;
-    double gain = runtime.myfloat2;
+    const auto runtime = cfgy::loads("myfloat2: .25\nc:\n  myel1: 61 + 2");
+    int count = runtime.at("c.myel1");
+    double gain = runtime["myfloat2"];
     assert(count == 63 && gain == 0.25);
     std::ostringstream output;
-    output << runtime.c.myel1 << ' ' << runtime.myfloat2;
+    output << runtime.at("c.myel1") << ' ' << runtime["myfloat2"];
     assert(output.str() == "63 0.25");
 
     const auto nested = cfgy::loads(

@@ -5,40 +5,40 @@ YAML-style configuration with arithmetic, references, and angle conversions.
 ## Python 3.9+
 
 ```python
+import sys
 import cfgy
 
-cfg = cfgy.load("example.cfgy")
+cfg = cfgy.load(sys.argv[1])
 print(cfg.c.myel1)   # 12
-print(cfg.myfloat2)  # 9.0
+print(f"{cfg.myfloat2:.1f}")  # 9.0
 ```
 
 Install from the project root.
 
 ```sh
 python -m pip install .
+python examples/python/example.py example.cfgy
 ```
 
 ## C++17
 
 ```cpp
 #include <cfgy>
-#include "example_config.hpp"
 #include <iostream>
 
-int main() {
-    const auto cfg = cfgy::load<ExampleConfig>("example.cfgy");
-    std::cout << cfg.c.myel1 << '\n';  // 12
-    double gain = cfg.myfloat2;       // 9.0
+int main(int argc, char* argv[]) {
+    if (argc != 2) return 2;
+    const auto cfg = cfgy::load(argv[1]);
+    std::cout << cfg.at("c.myel1") << '\n';  // 12
+    std::cout.precision(1);
+    std::cout << std::fixed << cfg["myfloat2"] << '\n';  // 9.0
 }
 ```
-
-The build generates dot access from the names `c.myel1` and `myfloat2`.
-The program reads the configuration at runtime.
 
 ```sh
 cmake -S . -B build
 cmake --build build
-./build/cfgy-example
+./build/example example.cfgy
 ```
 
-[Run the examples](examples/README.md) · [Example configuration](example.cfgy) · [File format](FORMAT.md) · [Generate a C++ header](FORMAT.md#generate-a-c-header)
+[Run the examples](examples/README.md) · [Example configuration](example.cfgy) · [File format](FORMAT.md)

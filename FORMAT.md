@@ -46,10 +46,16 @@ concatenated with `+`. The angle functions take one or more numeric arguments
 and return a float for one argument or a list for several. Division by zero,
 numeric overflow, unknown names, and incompatible operands are errors.
 
-## Generate a C++ header
+## C++ runtime lookup
 
-C++ dot access needs field names at compile time. Give the generator the paths
-your code reads. The configuration file is first opened by the running program.
+`cfgy::load(path)` reads the keys and values when the file is opened.
+Use `cfg.at("c.myel1")` or `cfg["c"]["myel1"]` for a nested value.
+Bracket lookup also accepts literal keys containing punctuation.
+
+## Optional C++ header generation
+
+For applications that use compile-time member names, the generator can produce
+a typed header from the paths the application reads.
 
 ```sh
 cmake -S . -B build
@@ -64,10 +70,6 @@ const auto cfg = cfgy::load<Settings>(path);
 int count = cfg.c.myel1;
 double gain = cfg.myfloat2;
 ```
-
-For keys discovered entirely at runtime, `const auto cfg = cfgy::load(path);`
-supports `cfg.at("c.myel1")` and `cfg["c"]["myel1"]` directly in assignments
-and output. Bracket lookup also accepts keys containing punctuation.
 
 If a representative file is available during development, the generator can
 infer all fields and their native types in one command.

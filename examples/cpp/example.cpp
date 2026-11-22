@@ -1,12 +1,19 @@
 #include <cfgy>
-#include "example_config.hpp"
-
-#include <iomanip>
 #include <iostream>
 
-int main() {
-    const auto cfg = cfgy::load<ExampleConfig>("example.cfgy");
-    std::cout << cfg.c.myel1 << '\n';  // 12
-    std::cout << std::fixed << std::setprecision(1)
-              << cfg.myfloat2 << '\n';  // 9.0
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <config-file>\n";
+        return 2;
+    }
+    try {
+        const auto cfg = cfgy::load(argv[1]);
+        const double gain = cfg["myfloat2"];
+        std::cout << cfg.at("c.myel1") << '\n';
+        std::cout.precision(1);
+        std::cout << std::fixed << gain << '\n';
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+        return 1;
+    }
 }

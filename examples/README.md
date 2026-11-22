@@ -1,13 +1,12 @@
 # Examples
 
-Start each section in the project root. Both examples read `example.cfgy`.
+Start in the project root. Pass either example a relative or absolute configuration path.
 
 ## Python 3.9+
 
 ```sh
 python -m pip install .
-cd examples/python
-python example.py
+python examples/python/example.py example.cfgy
 ```
 
 ## C++17
@@ -15,10 +14,12 @@ python example.py
 ```sh
 cmake -S . -B build
 cmake --build build
-./build/cfgy-example
+./build/example example.cfgy
 ```
 
 ## Expected output
+
+For `example.cfgy`, both examples print `c.myel1` and `myfloat2` (to one decimal place).
 
 ```text
 12
