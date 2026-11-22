@@ -17,3 +17,7 @@ __pycache__/
 /src/csharp/obj/
 /tests/csharp/bin/
 /tests/csharp/obj/
+/examples/rust/target/
+/examples/rust/Cargo.lock
+/examples/csharp/bin/
+/examples/csharp/obj/

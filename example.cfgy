@@ -18,3 +18,5 @@ b: todeg(pi/2) # returns pi/2 in deg as float
 
 rpy: torad(90, 0, 180) # returns [pi/2, 0, pi] as floats 
 
+magnitudes: abs(-3, -2.5) # [3, 2.5]
+heading: sin(torad(90)) # 1.0

@@ -1,6 +1,7 @@
 # ConFiGifY
 
-YAML-style configuration with arithmetic, references, and angle conversions.
+YAML-style configuration with arithmetic, references, and math functions.
+One C++ evaluator powers the [bindings for Python, C, Rust, Go, Java, Julia, C#, Lua, and MATLAB](BINDINGS.md).
 
 ## Python 3.9+
 
@@ -13,7 +14,7 @@ print(cfg["c"]["myel1"])  # 12
 print(cfg["myfloat2"])    # 9.0
 ```
 
-Install from the project root.
+Install from the project root with a C++17 compiler and Python development headers.
 
 ```sh
 python3 -m venv .venv

@@ -1,0 +1,12 @@
+[package]
+name = "cfgy-example"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+cfgy = { path = "../../src/rust" }
+
+[[bin]]
+name = "example"
+path = "example.rs"

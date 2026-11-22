@@ -1,6 +1,6 @@
 # Examples
 
-Start in the project root. Pass either example a relative or absolute configuration path.
+Start in the project root. Pass a relative or absolute configuration path. The [binding guide](../BINDINGS.md) has build and run commands for the other languages.
 
 ## Python 3.9+
 
