@@ -14,7 +14,9 @@
   comment. Each expression fits on one line.
 - Bare names in values refer to previously defined keys. Lookup starts in the
   current mapping and continues through its enclosing mappings. `c.myel1`
-  reads a field of an earlier mapping. The built-in names `true`, `false`,
+  reads a field of an earlier mapping. Within `sensor`, an earlier sibling
+  field is available as `rate_hz`. Once the `sensor` block ends, later entries
+  can use `sensor.rate_hz`. The built-in names `true`, `false`,
   `null`, and `pi` take precedence when used as unqualified values.
 
 ## Expressions

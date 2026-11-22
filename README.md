@@ -7,9 +7,11 @@ the time between readings and the number of samples to collect.
 ```yaml
 sensor:
   rate_hz: 200
+
+recording:
   duration_s: 2
-  interval_ms: 1000 / rate_hz     # 5.0
-  samples: rate_hz * duration_s   # 400
+  interval_ms: 1000 / sensor.rate_hz     # 5.0
+  samples: sensor.rate_hz * duration_s   # 400
 ```
 
 Change `rate_hz` to `100` and the next load gives you a 10 ms interval and 200 samples.
