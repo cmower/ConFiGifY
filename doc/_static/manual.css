@@ -2,6 +2,33 @@
     background: #25313b;
 }
 
+.wy-side-nav-search > a img.logo,
+.wy-nav-top img.logo {
+    color-scheme: dark;
+    width: 13rem;
+    height: auto;
+    padding: 0;
+    background: none;
+}
+
+.wy-nav-top img.logo {
+    width: 9.5rem;
+    margin: 0;
+    border-radius: 0;
+    vertical-align: middle;
+}
+
+.wy-nav-top button {
+    float: left;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: none;
+    font-size: 1.6rem;
+    line-height: inherit;
+    cursor: pointer;
+}
+
 .wy-side-nav-search input[type="text"] {
     border-color: #69859a;
     border-radius: 3px;

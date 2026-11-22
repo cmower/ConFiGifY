@@ -1,0 +1,17 @@
+{% extends "!layout.html" %}
+
+{% macro home_link() -%}
+  <a href="{{ pathto(root_doc) }}"><img class="logo" src="{{ logo_url }}" alt="{{ project }} documentation"></a>
+{%- endmacro %}
+
+{% block sidebartitle %}
+  {{ home_link() }}
+  {% include "searchbox.html" %}
+{% endblock %}
+
+{% block mobile_nav %}
+  <button type="button" data-toggle="wy-nav-top" aria-label="{{ _('Open navigation menu') }}">
+    <span class="fa fa-bars" aria-hidden="true"></span>
+  </button>
+  {{ home_link() }}
+{% endblock %}

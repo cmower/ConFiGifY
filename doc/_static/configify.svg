@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="292" height="68" viewBox="0 0 292 68"
+     role="img" aria-labelledby="title">
+  <title id="title">ConFiGifY</title>
+  <style>
+    .ink { fill: #233b50; }
+    .accent { fill: #087c75; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #f1f6f9; }
+      .accent { fill: #6bd6bd; }
+    }
+  </style>
+
+  <!-- An open C surrounds the two indented strokes of an F. -->
+  <g>
+    <path class="ink" d="M20 5h39l-9 9H24L13 25v18l11 11h35l-9 9H20L4 47V21Z"/>
+    <path class="accent" d="M23 23h33l-8 8H31v6h17l-8 8h-9v4l-8-8Z"/>
+  </g>
+
+  <!-- Outlined lettering keeps the wordmark consistent without a font. -->
+  <g class="ink" transform="translate(74 16.5)">
+    <path d="M28.4 5.4 24.6 9c-2.3-2.6-5.1-4-8.8-4C9.4 5 5.4 10 5.4 17.5S9.4 30 15.8 30c3.7 0 6.7-1.5 9-4.4l3.8 3.3c-3.1 4.1-7.5 6.4-12.9 6.4C6.3 35.3 0 28.2 0 17.5S6.3-.3 15.8-.3c5.3 0 9.6 2 12.6 5.7Z"/>
+    <path fill-rule="evenodd" d="M42 9.7c7.1 0 11.9 5.1 11.9 12.8S49.1 35.3 42 35.3s-11.9-5.1-11.9-12.8S34.9 9.7 42 9.7Zm0 4.5c-4.1 0-6.7 3.2-6.7 8.3s2.6 8.3 6.7 8.3 6.7-3.2 6.7-8.3-2.6-8.3-6.7-8.3Z"/>
+    <path d="M58 10.3h5v3.4c1.8-2.6 4.6-4 8-4 5.7 0 8.9 3.6 8.9 10.1v14.9h-5.2V20.5c0-4.2-1.7-6.2-5.1-6.2-3.9 0-6.4 2.8-6.4 7.1v13.3H58Z"/>
+    <path d="M86 .3h21.4v4.9h-16v10.4H105v4.9H91.4v14.2H86Z"/>
+    <path d="M111.5 10.3h5.2v24.4h-5.2Z"/>
+    <circle class="accent" cx="114.1" cy="3.3" r="3.1"/>
+    <path d="M150.8 5.4 147 9c-2.3-2.6-5.4-4-9.1-4-6.6 0-10.9 5-10.9 12.6 0 7.8 4.2 12.6 11.4 12.6 3 0 5.5-.6 7.7-1.9v-7.8h-8.6v-4.8h13.9v15.4c-3.5 2.6-8.1 4.2-13.3 4.2-10.1 0-16.6-7-16.6-17.7 0-10.8 6.6-17.9 16.4-17.9 5.4 0 9.7 2 12.9 5.7Z"/>
+    <path d="M156.5 10.3h5.2v24.4h-5.2Z"/>
+    <circle class="accent" cx="159.1" cy="3.3" r="3.1"/>
+    <path d="M168.4 10.3V8.1c0-6.1 3.3-9.5 9.3-9.5h3.3v4.6h-2.5c-3.4 0-4.9 1.4-4.9 4.8v2.3h6.4v4.4h-6.4v20h-5.2v-20h-4v-4.4Z"/>
+    <path d="M183.8.3h6.3l8.7 14.8L207.5.3h6.2l-12.3 20.1v14.3H196V20.4Z"/>
+  </g>
+</svg>

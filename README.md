@@ -1,4 +1,4 @@
-# ConFiGifY
+# ![ConFiGifY](doc/_static/configify.svg)
 
 ConFiGifY lets you write formulas alongside ordinary settings in a YAML-style
 `.cfgy` file. Formulas can use earlier settings by name. When your application

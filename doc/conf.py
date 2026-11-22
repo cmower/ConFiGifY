@@ -6,6 +6,8 @@ exclude_patterns = ["README.md"]
 myst_heading_anchors = 3
 
 html_theme = "sphinx_rtd_theme"
+templates_path = ["_templates"]
+html_logo = "_static/configify.svg"
 html_title = "ConFiGifY documentation"
 html_short_title = "ConFiGifY"
 html_theme_options = {"navigation_depth": 2, "style_nav_header_background": "#233b50"}
