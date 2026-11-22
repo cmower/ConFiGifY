@@ -1,0 +1,121 @@
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
+#include <iosfwd>
+#include <limits>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+namespace cfgy {
+
+class ConfigError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
+struct Value {
+    using List = std::vector<Value>;
+    using Map = std::map<std::string, Value>;
+    using Storage = std::variant<std::nullptr_t, bool, std::int64_t, double, std::string, List, Map>;
+    Storage data;
+
+    const Value& operator[](const std::string& key) const { return as_map().at(key); }
+    const Value& operator[](std::size_t index) const { return as_list().at(index); }
+    const Value& at(const std::string& dotted_path) const;
+
+    // Let the receiving variable choose the numeric type for runtime-only lookups.
+    template<class T, std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<T, bool>, int> = 0>
+    operator T() const {
+        const auto value = as_int();
+        if constexpr (std::is_signed_v<T>) {
+            if (value < std::numeric_limits<T>::min() || value > std::numeric_limits<T>::max())
+                throw std::out_of_range("integer conversion out of range");
+        } else {
+            if (value < 0 || static_cast<std::uint64_t>(value) > std::numeric_limits<T>::max())
+                throw std::out_of_range("integer conversion out of range");
+        }
+        return static_cast<T>(value);
+    }
+    operator double() const {
+        if (const auto* integer = std::get_if<std::int64_t>(&data)) return static_cast<double>(*integer);
+        return as_float();
+    }
+    bool is_null() const { return std::holds_alternative<std::nullptr_t>(data); }
+    bool as_bool() const { return std::get<bool>(data); }
+    std::int64_t as_int() const { return std::get<std::int64_t>(data); }
+    double as_float() const { return std::get<double>(data); }
+    const std::string& as_string() const { return std::get<std::string>(data); }
+    const List& as_list() const { return std::get<List>(data); }
+    const Map& as_map() const { return std::get<Map>(data); }
+};
+
+std::ostream& operator<<(std::ostream& out, const Value& value);
+Value loads(const std::string& text, const std::string& source = "<string>");
+Value load(const std::string& path);
+
+// A generated header specializes decode for its aggregate type.
+template<class T>
+T decode(const Value& root, const std::string& source);
+
+template<class T>
+T load(const std::string& path) {
+    return decode<T>(load(path), path);
+}
+
+template<class T>
+T loads(const std::string& text, const std::string& source = "<string>") {
+    return decode<T>(loads(text, source), source);
+}
+
+namespace detail {
+
+template<class T>
+const T& field(const Value& root, const std::string& source, std::initializer_list<const char*> keys) {
+    const Value* value = &root;
+    std::string path;
+    for (const auto key : keys) {
+        const auto* map = std::get_if<Value::Map>(&value->data);
+        if (!map) throw ConfigError(source + ": expected a mapping at " + path);
+        if (!path.empty()) path += '.';
+        path += key;
+        const auto it = map->find(key);
+        if (it == map->end()) throw ConfigError(source + ": missing field " + path);
+        value = &it->second;
+    }
+    if constexpr (std::is_same_v<T, Value>) {
+        return *value;
+    } else {
+        const auto* result = std::get_if<T>(&value->data);
+        if (!result) throw ConfigError(source + ": type mismatch at " + path);
+        return *result;
+    }
+}
+
+template<class T>
+std::vector<T> list_field(const Value& root, const std::string& source, std::initializer_list<const char*> keys) {
+    const auto& list = field<Value::List>(root, source, keys);
+    std::vector<T> values;
+    values.reserve(list.size());
+    for (const auto& item : list) {
+        const auto* value = std::get_if<T>(&item.data);
+        if (!value) {
+            std::string path;
+            for (const auto key : keys) {
+                if (!path.empty()) path += '.';
+                path += key;
+            }
+            throw ConfigError(source + ": type mismatch at " + path + "[" + std::to_string(values.size()) + "]");
+        }
+        values.push_back(*value);
+    }
+    return values;
+}
+
+}  // namespace detail
+}  // namespace cfgy
