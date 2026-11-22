@@ -57,7 +57,7 @@ jobs:
 
       - name: Install GNU Octave on Linux
         if: runner.os == 'Linux' && inputs.binding == 'octave'
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave liboctave-dev
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave octave-dev
 
       - name: Install Lua on macOS
         if: runner.os == 'macOS' && inputs.binding == 'lua'
