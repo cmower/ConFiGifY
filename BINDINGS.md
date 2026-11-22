@@ -4,6 +4,8 @@ Every binding calls the C++17 evaluator. The [examples](examples) read the same 
 values from the path supplied on the command line. Run the commands below from
 the repository root.
 
+<!-- Begin binding reference -->
+
 ## Build the shared library
 
 ```sh
@@ -12,9 +14,18 @@ cmake --build build
 export LD_LIBRARY_PATH="$PWD/build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"  # Linux
 ```
 
-On macOS use `DYLD_LIBRARY_PATH`; on Windows put the directory containing
-`cfgy.dll` on `PATH`. To install the C/C++ headers and library under a prefix,
-run `cmake --install build --prefix /your/prefix`.
+On macOS, set `DYLD_LIBRARY_PATH` to the build directory. With Visual Studio
+on Windows, build a Release configuration and make its DLL available in PowerShell.
+
+```powershell
+cmake -S . -B build -DBUILD_SHARED_LIBS=ON
+cmake --build build --config Release
+$env:Path = "$PWD\build\Release;$env:Path"
+.\build\Release\example.exe examples\example.cfgy
+```
+
+To install the C/C++ headers and library under a prefix, run
+`cmake --install build --prefix /your/prefix`.
 
 ## Python
 
@@ -162,6 +173,8 @@ Use the module's platform extension when setting `LUA_CPATH`.
 
 ## MATLAB
 
+The binding also runs in GNU Octave. CI tests it in Octave. MATLAB testing is pending.
+
 Set `Matlab_ROOT_DIR` to your MATLAB installation. CMake builds a MEX file for
 that installation. Add both the package directory and the MEX output directory
 to the MATLAB path.
@@ -185,6 +198,17 @@ disp(cfg{'sensor'}{'channels'}{1});      % ax
 `containers.Map` subclass. Standard map lookups such as `cfg('sensor')`
 also work. Lists are cell arrays, integers are `int64`, strings are character
 vectors, and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
+
+## GNU Octave
+
+Octave uses the MATLAB binding and the same lookup syntax. Build the shared
+library first, then use Octave's `mkoctfile` to compile its MEX module.
+On Ubuntu 24.04, `octave-dev` provides this tool.
+
+```sh
+mkoctfile --mex -Isrc/c src/matlab/native.c -Lbuild -lcfgy -o build/cfgy_native.mex
+octave-cli --quiet --eval "addpath('src/matlab','build','examples/matlab'); example_cfgy('examples/example.cfgy')"
+```
 
 ## Conformance checks
 

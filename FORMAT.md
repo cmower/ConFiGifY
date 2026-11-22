@@ -35,7 +35,7 @@
 
 The expression grammar, from lowest precedence to highest, is
 
-```ebnf
+```text
 expression = product { ("+" | "-") product }
 product    = unary { ("*" | "/") unary }
 unary      = ("+" | "-") unary | primary

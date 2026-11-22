@@ -1,0 +1,34 @@
+.wy-nav-side {
+    background: #25313b;
+}
+
+.wy-side-nav-search input[type="text"] {
+    border-color: #69859a;
+    border-radius: 3px;
+}
+
+.wy-nav-content {
+    max-width: 56rem;
+}
+
+.rst-content code.literal {
+    color: #254f64;
+}
+
+.rst-content div[class^="highlight-"] {
+    border-left: 3px solid #87a8b8;
+}
+
+.rst-content div[class^="highlight-"] pre {
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+@media (min-width: 769px) {
+    .wy-nav-content-wrap {
+        background: #f3f5f6;
+    }
+    .wy-nav-content {
+        min-height: 100vh;
+    }
+}
