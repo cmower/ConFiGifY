@@ -4,10 +4,7 @@ ConFiGifY evaluates formulas when your application loads a `.cfgy` file.
 Its indentation is inspired by YAML. The two formats are incompatible, so use
 the ConFiGifY parser to read `.cfgy` files.
 
-## Write a configuration
-
-In the root of a [ConFiGifY checkout](https://github.com/cmower/ConFiGifY),
-save this as `recorder.cfgy`.
+## Example configuration
 
 ```text
 sensor:
@@ -22,14 +19,15 @@ recording:
 At 400 Hz the recorder takes 800 samples, 2.5 ms apart. Changing `rate_hz` to
 100 gives 200 samples, 10 ms apart.
 
-## Load the file
+## Run the example
 
 The Python binding needs Python 3.9+, its development headers, and a C++17
-compiler. Install it and run the example in an active virtual environment.
+compiler. From a [ConFiGifY checkout](https://github.com/cmower/ConFiGifY),
+run the bundled example in an active virtual environment.
 
 ```sh
 python3 -m pip install .
-python3 examples/python/example.py recorder.cfgy
+python3 examples/python/example.py examples/example.cfgy
 ```
 
 The example reads the path from the command line. These three lines print
