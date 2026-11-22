@@ -46,39 +46,15 @@ concatenated with `+`. The angle functions take one or more numeric arguments
 and return a float for one argument or a list for several. Division by zero,
 numeric overflow, unknown names, and incompatible operands are errors.
 
-## C++ runtime lookup
+## Reading values
 
-`cfgy::load(path)` reads the keys and values when the file is opened.
-Use `cfg.at("c.myel1")` or `cfg["c"]["myel1"]` for a nested value.
-Bracket lookup also accepts literal keys containing punctuation.
+Python and C++ use the same bracket syntax after loading a file.
 
-## Optional C++ header generation
+| Lookup | Value in `example.cfgy` |
+| --- | --- |
+| `cfg["myfloat2"]` | `9.0` |
+| `cfg["c"]["myel1"]` | `12` |
+| `cfg["mylist2"][0]` | `1` |
 
-For applications that use compile-time member names, the generator can produce
-a typed header from the paths the application reads.
-
-```sh
-cmake -S . -B build
-cmake --build build --target cfgy-gen
-./build/cfgy-gen -o settings.hpp --fields Settings c.myel1 myfloat2
-```
-
-Include `settings.hpp` and load any file containing those fields.
-
-```cpp
-const auto cfg = cfgy::load<Settings>(path);
-int count = cfg.c.myel1;
-double gain = cfg.myfloat2;
-```
-
-If a representative file is available during development, the generator can
-infer all fields and their native types in one command.
-
-```sh
-./build/cfgy-gen -o settings.hpp sample.cfgy Settings
-```
-
-In this mode, lists of matching scalars become typed vectors. Empty, mixed,
-or nested lists in the sample become `cfgy::Value::List`. Selected field
-names must be usable C++ identifiers. Missing fields and mismatches with an
-inferred type raise `cfgy::ConfigError` at load time. Extra keys are accepted.
+Each string selects one literal key. For example, `cfg["a.b"]` reads the key
+named `a.b`, and `cfg["a"]["b"]` reads `b` inside `a`. List indices start at zero.

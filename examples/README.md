@@ -5,8 +5,10 @@ Start in the project root. Pass either example a relative or absolute configurat
 ## Python 3.9+
 
 ```sh
-python -m pip install .
-python examples/python/example.py example.cfgy
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -e .
+python3 examples/python/example.py example.cfgy
 ```
 
 ## C++17
@@ -19,9 +21,4 @@ cmake --build build
 
 ## Expected output
 
-For `example.cfgy`, both examples print `c.myel1` and `myfloat2` (to one decimal place).
-
-```text
-12
-9.0
-```
+Both examples print `12` first. Python displays the float as `9.0` and C++ displays it as `9`.

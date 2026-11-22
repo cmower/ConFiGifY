@@ -3,43 +3,37 @@
 #endif
 
 #include <cfgy>
-#include "test_config.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <sstream>
-#include <type_traits>
 
 int main() {
-    const auto cfg = cfgy::load<TestConfig>("example.cfgy");
-    static_assert(std::is_same_v<decltype(cfg.c.myel1), std::int64_t>);
-    static_assert(std::is_same_v<decltype(cfg.myfloat2), double>);
-    assert(cfg.myint == 24);
-    assert((cfg.mylist1 == std::vector<std::int64_t>{1, 3}));
-    assert((cfg.mylist2 == std::vector<std::int64_t>{1, 2, 1, 3}));
-    assert((cfg.myotherlist == std::vector<std::string>{"hello", "world"}));
-    assert(cfg.c.myel1 == 12 && cfg.c.myel2 == "nice");
-    assert(cfg.myfloat1 == 12.0 && cfg.myfloat2 == 9.0);
+    const auto cfg = cfgy::load("example.cfgy");
+    assert(cfg["myint"].as_int() == 24);
+    const auto& first = cfg["mylist1"].as_list();
+    assert(first.size() == 2 && first[0].as_int() == 1 && first[1].as_int() == 3);
+    const auto& joined = cfg["mylist2"].as_list();
+    assert(joined.size() == 4 && joined[0].as_int() == 1 && joined[1].as_int() == 2);
+    assert(joined[2].as_int() == 1 && joined[3].as_int() == 3);
+    const auto& words = cfg["myotherlist"].as_list();
+    assert(words.size() == 2 && words[0].as_string() == "hello" && words[1].as_string() == "world");
+    assert(cfg["c"]["myel1"].as_int() == 12 && cfg["c"]["myel2"].as_string() == "nice");
+    assert(cfg["myfloat1"].as_float() == 12.0 && cfg["myfloat2"].as_float() == 9.0);
     const double pi = std::acos(-1.0);
-    assert(std::abs(cfg.a - pi / 2) < 1e-12);
-    assert(std::abs(cfg.b - 90.0) < 1e-12);
-    assert(cfg.rpy.size() == 3 && cfg.rpy[1] == 0.0);
-    assert(std::abs(cfg.rpy[0] - pi / 2) < 1e-12);
-    assert(std::abs(cfg.rpy[2] - pi) < 1e-12);
+    assert(std::abs(cfg["a"].as_float() - pi / 2) < 1e-12);
+    assert(std::abs(cfg["b"].as_float() - 90.0) < 1e-12);
+    const auto& rpy = cfg["rpy"].as_list();
+    assert(rpy.size() == 3 && rpy[1].as_float() == 0.0);
+    assert(std::abs(rpy[0].as_float() - pi / 2) < 1e-12);
+    assert(std::abs(rpy[2].as_float() - pi) < 1e-12);
 
-    try {
-        cfgy::loads<TestConfig>("a: 1.5\nb: 2.5\nc:\n  myel1: 'wrong type'", "changed.cfgy");
-        assert(false && "expected a schema mismatch");
-    } catch (const cfgy::ConfigError& error) {
-        assert(std::string(error.what()) == "changed.cfgy: type mismatch at c.myel1");
-    }
-
-    const auto runtime = cfgy::loads("myfloat2: .25\nc:\n  myel1: 61 + 2");
-    int count = runtime.at("c.myel1");
+    const auto runtime = cfgy::loads("myfloat2: .25\nc:\n  myel1: 61 + 2\n'c.myel1': 7");
+    int count = runtime["c"]["myel1"];
     double gain = runtime["myfloat2"];
-    assert(count == 63 && gain == 0.25);
+    assert(count == 63 && gain == 0.25 && runtime["c.myel1"].as_int() == 7);
     std::ostringstream output;
-    output << runtime.at("c.myel1") << ' ' << runtime["myfloat2"];
+    output << runtime["c"]["myel1"] << ' ' << runtime["myfloat2"];
     assert(output.str() == "63 0.25");
 
     const auto nested = cfgy::loads(

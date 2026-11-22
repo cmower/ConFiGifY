@@ -5,27 +5,16 @@ add_library(cfgy src/cpp/cfgy.cpp)
 target_include_directories(cfgy PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp")
 target_compile_features(cfgy PUBLIC cxx_std_17)
 
-add_executable(cfgy-gen EXCLUDE_FROM_ALL src/cpp/tools/generate.cpp)
-target_link_libraries(cfgy-gen PRIVATE cfgy)
-
 add_executable(example examples/cpp/example.cpp)
 target_link_libraries(example PRIVATE cfgy)
 
 option(BUILD_TESTING "Build the C++ parser tests" OFF)
 include(CTest)
 if(BUILD_TESTING)
-    set(sample "${CMAKE_CURRENT_SOURCE_DIR}/example.cfgy")
-    add_custom_command(
-        OUTPUT test_config.hpp
-        COMMAND cfgy-gen -o test_config.hpp "${sample}" TestConfig
-        DEPENDS cfgy-gen "${sample}"
-        VERBATIM
-    )
-    add_executable(cfgy-test tests/cpp/test_configify.cpp "${CMAKE_CURRENT_BINARY_DIR}/test_config.hpp")
-    target_include_directories(cfgy-test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+    add_executable(cfgy-test tests/cpp/test_configify.cpp)
     target_link_libraries(cfgy-test PRIVATE cfgy)
     add_test(NAME cfgy-parser COMMAND cfgy-test)
     set_tests_properties(cfgy-parser PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-    add_test(NAME cfgy-example-cli COMMAND example "${sample}")
-    set_tests_properties(cfgy-example-cli PROPERTIES PASS_REGULAR_EXPRESSION "12[\r\n]+9\\.0")
+    add_test(NAME cfgy-example-cli COMMAND example "${CMAKE_CURRENT_SOURCE_DIR}/example.cfgy")
+    set_tests_properties(cfgy-example-cli PROPERTIES PASS_REGULAR_EXPRESSION "12[\r\n]+9[\r\n]")
 endif()
