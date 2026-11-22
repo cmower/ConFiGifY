@@ -32,6 +32,9 @@ int main() {
     int count = runtime["c"]["myel1"];
     double gain = runtime["myfloat2"];
     assert(count == 63 && gain == 0.25 && runtime["c.myel1"].as_int() == 7);
+    const char* section = "c";
+    const std::string field = "myel1";
+    assert(runtime[section][field].as_int() == count);
     std::ostringstream output;
     output << runtime["c"]["myel1"] << ' ' << runtime["myfloat2"];
     assert(output.str() == "63 0.25");

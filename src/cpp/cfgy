@@ -24,7 +24,9 @@ struct Value {
     using Storage = std::variant<std::nullptr_t, bool, std::int64_t, double, std::string, List, Map>;
     Storage data;
 
-    const Value& operator[](const std::string& key) const { return as_map().at(key); }
+    // Match string literals directly so numeric conversions cannot select built-in pointer indexing.
+    template<class Key, std::enable_if_t<std::is_convertible_v<const Key&, std::string>, int> = 0>
+    const Value& operator[](const Key& key) const { return as_map().at(key); }
     const Value& operator[](std::size_t index) const { return as_list().at(index); }
     const Value& at(const std::string& dotted_path) const;
     const Value& operator()(const std::string& dotted_path) const { return at(dotted_path); }
