@@ -15,7 +15,7 @@ end
 
 function value = unpack(node)
     if isstruct(node)
-        value = containers.Map('KeyType', 'char', 'ValueType', 'any');
+        value = cfgy.Config();
         for i = 1:numel(node.keys)
             key = char(native2unicode(node.keys{i}, 'UTF-8'));
             value(key) = unpack(node.values{i});

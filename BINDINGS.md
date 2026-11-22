@@ -169,9 +169,19 @@ cmake --build build --target cfgy_native
 matlab -batch "addpath('src/matlab','build','examples/matlab'); example_cfgy('examples/example.cfgy')"
 ```
 
-`cfgy.load(path)` and `cfgy.loads(text)` return a `containers.Map`. Lists are
-one-based cell arrays, integers are `int64`, strings are character vectors,
-and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
+Use one pair of braces per map key or one-based list index.
+
+```matlab
+cfg = cfgy.load(path);
+disp(cfg{'c'}{'myel1'});   % 12
+disp(cfg{'myfloat2'});     % 9
+disp(cfg{'mylist1'}{1});   % 1
+```
+
+`cfgy.load(path)` and `cfgy.loads(text)` return a `cfgy.Config`, a
+`containers.Map` subclass. Standard map lookups such as `cfg('myfloat2')`
+also work. Lists are cell arrays, integers are `int64`, strings are character
+vectors, and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
 
 ## Conformance checks
 
