@@ -1,9 +1,11 @@
 # ![ConFiGifY](doc/_static/configify.svg)
 
-ConFiGifY lets you write formulas alongside ordinary settings in a `.cfgy` file.
-YAML inspired its indentation and key-value syntax, but the two formats are
-incompatible. When your application loads the file, ConFiGifY resolves references
-to earlier settings and evaluates the formulas.
+ConFiGifY is a configuration file specification for defining settings with
+literal values and formulas. Formulas can reference earlier settings in the same
+`.cfgy` file. The parser evaluates them when your application loads the file.
+
+ConFiGifY borrows indentation and key-value syntax from YAML. The two formats
+are incompatible.
 
 This example configures a six-axis motion recorder and simulates a test pulse
 along the accelerometer’s Z axis.
