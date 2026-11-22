@@ -61,6 +61,9 @@ static int load_text(lua_State *L) {
     return finish(L, cfgy_parse(data, length, source));
 }
 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 int luaopen_cfgy(lua_State *L) {
     const luaL_Reg functions[] = {{"load", load_file}, {"loads", load_text}, {NULL, NULL}};
     luaL_newmetatable(L, "cfgy.list"); lua_pop(L, 1);

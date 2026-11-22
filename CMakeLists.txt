@@ -31,7 +31,8 @@ if(CFGY_LUA)
     target_include_directories(cfgy_lua PRIVATE ${LUA_INCLUDE_DIR})
     target_link_libraries(cfgy_lua PRIVATE cfgy ${LUA_LIBRARIES})
     set_target_properties(cfgy_lua PROPERTIES PREFIX "" OUTPUT_NAME cfgy
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lua" WINDOWS_EXPORT_ALL_SYMBOLS ON)
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lua"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lua" WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
 option(CFGY_MATLAB "Build the MATLAB MEX module" OFF)

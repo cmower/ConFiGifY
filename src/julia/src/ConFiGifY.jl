@@ -1,7 +1,7 @@
 module ConFiGifY
 
 export load, loads
-const lib = "libcfgy"
+const lib = Sys.iswindows() ? "cfgy" : "libcfgy"
 
 struct Span
     data::Ptr{UInt8}
