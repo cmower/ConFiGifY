@@ -22,7 +22,7 @@ and calculates the trigger threshold from the sensor's mounting angle.
 
 ## Supported languages
 
-All ten languages use the same C++ evaluator. [Setup and examples by language](BINDINGS.md)
+All ten languages use the same C++ evaluator. [Browse and run the examples](examples/README.md).
 
 | Language | Implemented | Tested on Linux |
 | --- | :---: | :---: |
@@ -38,44 +38,3 @@ All ten languages use the same C++ evaluator. [Setup and examples by language](B
 | Rust | ✓ | ✓ |
 
 \* Tests passed in GNU Octave. Testing in MATLAB is pending.
-
-## Python 3.9+
-
-```python
-import sys
-import cfgy
-
-cfg = cfgy.load(sys.argv[1])
-print(cfg["recording"]["samples"])      # 800
-print(cfg["recording"]["interval_ms"])  # 2.5
-```
-
-Install from the project root with a C++17 compiler and Python development headers.
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -e .
-python3 examples/python/example.py examples/example.cfgy
-```
-
-## C++17
-
-```cpp
-#include <cfgy>
-#include <iostream>
-
-int main(int argc, char* argv[]) {
-    if (argc != 2) return 2;
-    const auto cfg = cfgy::load(argv[1]);
-    const double interval_ms = cfg["recording"]["interval_ms"];
-    std::cout << cfg["recording"]["samples"] << '\n';  // 800
-    std::cout << interval_ms << '\n';                  // 2.5
-}
-```
-
-```sh
-cmake -S . -B build
-cmake --build build
-./build/example examples/example.cfgy
-```
