@@ -23,9 +23,10 @@ mount:
   sensor_to_body: Rot.from_rpy(0, 30, 0)
 
 simulation:
-  seed: Rand.seed(42)
+  noise_seed: Rand.seed(42)
   accel_gain: matrix([[1.01, 0, 0], [0, 1, 0], [0, 0, 0.99]])
-  sensor_pulse_m_s2: [0, 0, Rand.normal(2, 0.02)]
+  lateral_noise_m_s2: Rand.uniform[noise_seed](-0.02, 0.02)
+  sensor_pulse_m_s2: lateral_noise_m_s2 + [2]
   body_pulse_m_s2: mount.sensor_to_body * accel_gain * sensor_pulse_m_s2
 ```
 

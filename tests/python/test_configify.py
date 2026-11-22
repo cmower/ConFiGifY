@@ -27,9 +27,13 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(cfg.recording.pretrigger_samples, 400)
         self.assertEqual(cfg.recording.samples, 800)
         self.assertEqual(cfg.recording.interval_ms, 2.5)
-        pulse = cfg.simulation.sensor_pulse_m_s2[2] * 0.99
-        self.assertAlmostEqual(cfg.simulation.body_pulse_m_s2[0], pulse * math.sin(cfg.mount.tilt_rad))
-        self.assertAlmostEqual(cfg.simulation.body_pulse_m_s2[2], pulse * math.cos(cfg.mount.tilt_rad))
+        x, y = cfg.simulation.lateral_noise_m_s2
+        self.assertEqual(cfg.simulation.sensor_pulse_m_s2, [x, y, 2])
+        c, s = math.cos(cfg.mount.tilt_rad), math.sin(cfg.mount.tilt_rad)
+        body = cfg.simulation.body_pulse_m_s2
+        self.assertAlmostEqual(body[0], c * 1.01 * x + s * 0.99 * 2)
+        self.assertAlmostEqual(body[1], y)
+        self.assertAlmostEqual(body[2], -s * 1.01 * x + c * 0.99 * 2)
 
     def test_expressions(self):
         cfg = cfgy.load("tests/expressions.cfgy")
@@ -133,6 +137,50 @@ alias: uniform
         reset = cfgy.loads("s: Rand.seed(0)\na: Rand.uniform()\nt: Rand.seed(0)\nb: Rand.uniform()")
         self.assertEqual(reset.a, reset.b)
         self.assertEqual(cfgy.loads("x: Rand.int(-5, -5)").x, -5)
+
+    def test_seeded_pairs_and_independent_streams(self):
+        cfg = cfgy.loads("""
+seeds:
+  first: Rand.seed(42)
+  second: Rand.seed(12)
+a: Rand.uniform[seeds.first](-1, 1)
+b: Rand.normal[seeds.second](2, 0.5)
+alias: seeds.first
+c: Rand.int[alias](-4, 4)
+repeat: Rand.seed(42)
+d: Rand.uniform[repeat](-1, 1)
+e: Rand.int[repeat](-4, 4)
+f: Rand.uniform[seeds.first]()
+g: Rand.normal[seeds.second]()
+default_draw: Rand.uniform(-1, 1)
+""")
+        first = cfgy.loads("""
+s: Rand.seed(42)
+u: [Rand.uniform(-1, 1), Rand.uniform(-1, 1)]
+i: [Rand.int(-4, 4), Rand.int(-4, 4)]
+unit: [Rand.uniform(), Rand.uniform()]
+""")
+        second = cfgy.loads("""
+s: Rand.seed(12)
+n: [Rand.normal(2, 0.5), Rand.normal(2, 0.5)]
+standard: [Rand.normal(), Rand.normal()]
+""")
+        self.assertIs(type(cfg.alias), int)
+        self.assertEqual(cfg.alias, 42)
+        self.assertEqual(cfg.a, cfg.d)
+        self.assertEqual(cfg.c, cfg.e)
+        self.assertEqual((cfg.a, cfg.c, cfg.f), (first.u, first.i, first.unit))
+        self.assertEqual((cfg.b, cfg.g), (second.n, second.standard))
+        self.assertEqual(cfg.default_draw, first.u[0])
+        self.assertTrue(all(type(n) is int for n in cfg.c))
+
+    def test_invalid_seed_selectors(self):
+        for expr in ["Rand.uniform[missing]()", "Rand.uniform[42]()", "Rand.uniform[true]()",
+                     "Rand.uniform[]()", "Rand.uniform[s, s]()", "Rand.uniform[s()",
+                     "Rand.uniform[s]", "Rand.seed[s](0)", "Rot.from_rpy[s](0, 0, 0)",
+                     "Rand.uniform[s](1, 1)", "Rand.int[s](0, 1.5)", "Rand.normal[s](0, 0)"]:
+            with self.subTest(expr=expr), self.assertRaisesRegex(cfgy.ConfigError, r"^bad:2:\d+:"):
+                cfgy.loads("s: Rand.seed(0)\nx: " + expr, source="bad")
 
     def test_invalid_matrix_rotation_and_random_arguments(self):
         invalid = [

@@ -218,6 +218,17 @@ private:
             {"abs", std::fabs}, {"sin", std::sin}, {"cos", std::cos}, {"tan", std::tan},
             {"sqrt", std::sqrt}, {"floor", std::floor}, {"ceil", std::ceil}
         };
+        const bool is_random = name.text.compare(0, 5, "Rand.") == 0;
+        std::shared_ptr<std::mt19937_64> stream;
+        if (accept("[")) {
+            if (!is_random || name.text == "Rand.seed")
+                fail(source_, name, "only random draws accept a seed selector");
+            const auto& start = line_[i_];
+            stream = expression().random_stream;
+            require("]");
+            if (!stream) fail(source_, start, "expected a seed created by Rand.seed");
+        }
+        require("(");
         auto args = arguments(")");
         try {
             if (name.text == "matrix" || name.text == "transpose") {
@@ -227,7 +238,7 @@ private:
                 return Eval{std::move(matrix)};
             }
             if (name.text.compare(0, 4, "Rot.") == 0) return detail::rotation(name.text, args);
-            if (name.text.compare(0, 5, "Rand.") == 0) return random_.call(name.text, args);
+            if (is_random) return random_.call(name.text, args, stream.get());
         } catch (const std::domain_error& e) {
             fail(source_, name, e.what());
         }
@@ -251,11 +262,12 @@ private:
     }
 
     Eval named(const Token& name) {
-        if (accept("(")) return call(name);
-        if (line_[i_].kind == "." && line_[i_ + 1].kind == "name" && line_[i_ + 2].kind == "(") {
+        if (line_[i_].kind == "(") return call(name);
+        if (line_[i_].kind == "." && line_[i_ + 1].kind == "name" &&
+            (line_[i_ + 2].kind == "(" || line_[i_ + 2].kind == "[")) {
             Token function = name;
             function.text += "." + line_[i_ + 1].text;
-            i_ += 3;
+            i_ += 2;
             return call(function);
         }
         static const Eval::Map constants = {

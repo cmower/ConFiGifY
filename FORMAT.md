@@ -40,6 +40,7 @@ expression = product { ("+" | "-") product }
 product    = unary { ("*" | "/") unary }
 unary      = ("+" | "-") unary | primary
 primary    = number | string | name { "." name } | function "(" [arguments] ")"
+           | "Rand" "." ("uniform" | "normal" | "int") "[" expression "]" "(" [arguments] ")"
            | "[" [arguments] "]" | "(" expression ")"
 function   = name [ "." name ]
 arguments  = expression { "," expression }
@@ -94,10 +95,11 @@ component last. In `A * B * v`, rotation `B` acts on the vector first.
 ## Random numbers
 
 ```yaml
-seed: Rand.seed(42)
-noise: Rand.normal(0, 0.02)
-offset: Rand.uniform(-1, 1)
-channel: Rand.int(0, 5)
+seed1: Rand.seed(42)
+seed2: Rand.seed(12)
+random_number: Rand.uniform[seed1](-1, 1)  # two floats
+noise: Rand.normal[seed2](0, 0.02)
+next_pair: Rand.uniform[seed1](-1, 1)
 ```
 
 | Call | Result |
@@ -105,12 +107,16 @@ channel: Rand.int(0, 5)
 | `Rand.uniform(low, high)` | Float in `[low, high)`, with `low < high`. Defaults to `[0, 1)`. |
 | `Rand.normal(mean, stddev)` | Normal draw with positive standard deviation. Defaults to mean 0 and standard deviation 1. |
 | `Rand.int(low, high)` | Integer from `low` through `high`, inclusive. Both bounds must be integers. |
-| `Rand.seed(n)` | Starts or resets this load's generator and returns the integer seed. |
+| `Rand.seed(n)` | Creates a stream, resets the default generator to `n`, and exposes the integer seed to your application. |
 
-Each load has its own generator. Without an explicit seed, the first draw
-seeds it from the system. A seed repeats the draw sequence on the same
-implementation. Calls draw in evaluation order. Referencing an earlier
-setting reuses the sampled value.
+`Rand.uniform[seed](...)`, `Rand.normal[seed](...)`, and `Rand.int[seed](...)`
+each return a list of two consecutive draws from that stream. In the example,
+`next_pair` contains the third and fourth uniform draws from `seed1`. A reference
+such as `alias: seed1` shares its position. Two calls to `Rand.seed(42)` start
+independent streams with the same sequence on the same implementation.
+
+Calls without brackets return one draw from the load's default generator.
+The first such draw uses a system seed if the file has not called `Rand.seed`.
 
 ## Reading values
 

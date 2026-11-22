@@ -10,3 +10,6 @@ rounded: [floor(-1.25), ceil(-1.25)]
 rpy: [90, 0, 180]
 rotation: Rot.from_rpy(rpy) * Rot.from_quat(0, 0, 1, 0)
 rotated_y: rotation * [0, 1, 0]
+seed1: Rand.seed(42)
+seed2: Rand.seed(12)
+random_number: Rand.uniform[seed1](-1, 1)

@@ -207,29 +207,39 @@ std::mt19937_64& Random::engine() {
     return *state_;
 }
 
-Eval Random::call(std::string_view name, const Eval::List& args) {
+Eval Random::call(std::string_view name, const Eval::List& args, std::mt19937_64* stream) {
     if (name == "Rand.seed") {
         if (args.size() != 1 || !std::holds_alternative<Integer>(args[0].data))
             throw std::domain_error("Rand.seed expects an integer");
-        state_.emplace(static_cast<std::uint64_t>(args[0].as_int()));
-        return args[0];
+        const auto seed = args[0].as_int();
+        state_.emplace(static_cast<std::uint64_t>(seed));
+        return Eval{seed, std::make_shared<std::mt19937_64>(*state_)};
     }
+
+    auto sample = [&](auto draw) -> Eval {
+        if (!stream) return Eval{draw(engine())};
+        return Eval{Eval::List{Eval{draw(*stream)}, Eval{draw(*stream)}}};
+    };
     if (name == "Rand.uniform") {
         if (!args.empty() && args.size() != 2) throw std::domain_error("Rand.uniform expects zero or two bounds");
         const double lo = args.empty() ? 0 : to_double(args[0]);
         const double hi = args.empty() ? 1 : to_double(args[1]);
         if (!(lo < hi)) throw std::domain_error("Rand.uniform requires low < high");
-        const double u = std::generate_canonical<double, 53>(engine());
-        // Interpolate across zero without overflowing hi - lo.
-        const double draw = lo < 0 && hi > 0 ? (1 - u) * lo + u * hi : lo + u * (hi - lo);
-        return Eval{std::min(draw, std::nextafter(hi, lo))};
+        return sample([lo, hi](auto& generator) {
+            const double u = std::generate_canonical<double, 53>(generator);
+            // Interpolate across zero without overflowing hi - lo.
+            const double draw = lo < 0 && hi > 0 ? (1 - u) * lo + u * hi : lo + u * (hi - lo);
+            return std::min(draw, std::nextafter(hi, lo));
+        });
     }
     if (name == "Rand.normal") {
         if (!args.empty() && args.size() != 2) throw std::domain_error("Rand.normal expects zero or two parameters");
         const double mean = args.empty() ? 0 : to_double(args[0]);
         const double deviation = args.empty() ? 1 : to_double(args[1]);
         if (!(deviation > 0)) throw std::domain_error("Rand.normal requires a positive standard deviation");
-        return Eval{finite(std::normal_distribution<double>(mean, deviation)(engine()))};
+        return sample([mean, deviation](auto& generator) {
+            return finite(std::normal_distribution<double>(mean, deviation)(generator));
+        });
     }
     if (name == "Rand.int") {
         if (args.size() != 2 || !std::holds_alternative<Integer>(args[0].data) ||
@@ -237,7 +247,7 @@ Eval Random::call(std::string_view name, const Eval::List& args) {
             throw std::domain_error("Rand.int expects two integer bounds");
         const Integer lo = args[0].as_int(), hi = args[1].as_int();
         if (lo > hi) throw std::domain_error("Rand.int requires low <= high");
-        return Eval{std::uniform_int_distribution<Integer>(lo, hi)(engine())};
+        return sample(std::uniform_int_distribution<Integer>(lo, hi));
     }
     throw std::domain_error("unknown function '" + std::string(name) + "'");
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cfgy>
+#include <memory>
 #include <optional>
 #include <random>
 #include <string_view>
@@ -18,6 +19,8 @@ struct Eval {
     using List = std::vector<Eval>;
     using Map = std::map<std::string, Eval>;
     std::variant<std::nullptr_t, bool, Integer, double, std::string, List, Map, Matrix> data;
+    // Rand.seed stores an integer in data. References to it share the draw sequence.
+    std::shared_ptr<std::mt19937_64> random_stream = nullptr;
 
     Integer as_int() const { return std::get<Integer>(data); }
     double as_float() const { return std::get<double>(data); }
@@ -35,7 +38,7 @@ Eval rotation(std::string_view name, const Eval::List& args);
 
 class Random {
 public:
-    Eval call(std::string_view name, const Eval::List& args);
+    Eval call(std::string_view name, const Eval::List& args, std::mt19937_64* stream);
 private:
     std::optional<std::mt19937_64> state_;
     std::mt19937_64& engine();
