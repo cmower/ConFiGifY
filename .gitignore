@@ -11,3 +11,9 @@ __pycache__/
 /dist/
 /src/python/_cfgy*.so
 /src/python/_cfgy*.pyd
+/src/rust/target/
+/src/rust/Cargo.lock
+/src/csharp/bin/
+/src/csharp/obj/
+/tests/csharp/bin/
+/tests/csharp/obj/
