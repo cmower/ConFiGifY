@@ -1,0 +1,20 @@
+myint: 12 * 2 # returns 24 when loaded
+
+mylist1: [1, 3]
+mylist2: [1, 2] + mylist1 # returns [1, 2, 1, 3]
+myotherlist:
+  - "hello"
+  - "world"
+
+c:
+  myel1: 12
+  myel2: "nice"
+
+myfloat1: 12.0 # returns 12.0
+myfloat2: 2. + 7. # return 9.0
+
+a: torad(90) # returns 90deg in radians as a float
+b: todeg(pi/2) # returns pi/2 in deg as float
+
+rpy: torad(90, 0, 180) # returns [pi/2, 0, pi] as floats 
+
