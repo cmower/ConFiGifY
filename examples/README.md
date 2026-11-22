@@ -8,7 +8,7 @@ Start in the project root. Pass a relative or absolute configuration path. The [
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -e .
-python3 examples/python/example.py example.cfgy
+python3 examples/python/example.py examples/example.cfgy
 ```
 
 ## C++17
@@ -16,7 +16,7 @@ python3 examples/python/example.py example.cfgy
 ```sh
 cmake -S . -B build
 cmake --build build
-./build/example example.cfgy
+./build/example examples/example.cfgy
 ```
 
 ## Expected output

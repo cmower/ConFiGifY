@@ -20,7 +20,7 @@ Install from the project root with a C++17 compiler and Python development heade
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -e .
-python3 examples/python/example.py example.cfgy
+python3 examples/python/example.py examples/example.cfgy
 ```
 
 ## C++17
@@ -41,5 +41,5 @@ int main(int argc, char* argv[]) {
 ```sh
 cmake -S . -B build
 cmake --build build
-./build/example example.cfgy
+./build/example examples/example.cfgy
 ```

@@ -20,7 +20,7 @@ class ParserTests(unittest.TestCase):
             cfgy.loads("x: sqrt(-1)", "bad")
 
     def test_example(self):
-        cfg = cfgy.load("example.cfgy")
+        cfg = cfgy.load("examples/example.cfgy")
         self.assertEqual(cfg.myint, 24)
         self.assertEqual(cfg.mylist1, [1, 3])
         self.assertEqual(cfg["mylist2"], [1, 2, 1, 3])

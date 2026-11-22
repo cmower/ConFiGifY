@@ -26,7 +26,7 @@ and platform includes the evaluator.
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install .
-python3 examples/python/example.py example.cfgy
+python3 examples/python/example.py examples/example.cfgy
 ```
 
 `cfgy.load(path)` and `cfgy.loads(text, source="<string>")` return a `Config`.
@@ -42,8 +42,8 @@ including on error. The [C header](src/c/cfgy.h) defines the value types.
 
 ```sh
 cc -Isrc/c examples/c/example.c -Lbuild -lcfgy -o build/example-c
-./build/example-c example.cfgy
-./build/example example.cfgy
+./build/example-c examples/example.cfgy
+./build/example examples/example.cfgy
 ```
 
 C++ uses `cfgy::load(path)` and `cfgy::loads(text, source)` from `<cfgy>`.
@@ -56,7 +56,7 @@ Index maps and lists with brackets, then match the scalar's `Value` variant.
 
 ```sh
 export CFGY_LIB_DIR="$PWD/build"
-cargo run --manifest-path examples/rust/Cargo.toml -- example.cfgy
+cargo run --manifest-path examples/rust/Cargo.toml -- examples/example.cfgy
 ```
 
 ## Go
@@ -68,7 +68,7 @@ a local `replace` directive.
 
 ```sh
 export CGO_LDFLAGS="-L$PWD/build"
-(cd examples/go && go run . ../../example.cfgy)
+(cd examples/go && go run . ../example.cfgy)
 ```
 
 ## Java
@@ -81,7 +81,7 @@ and `null`. Parse errors throw `IllegalArgumentException`.
 ```sh
 cmake -S . -B build -DCFGY_JAVA=ON
 cmake --build build --target cfgy_java cfgy_jni
-java -Djava.library.path=build -cp build/cfgy.jar examples/java/Example.java example.cfgy
+java -Djava.library.path=build -cp build/cfgy.jar examples/java/Example.java examples/example.cfgy
 ```
 
 The single-file example command requires Java 11 or later.
@@ -94,7 +94,7 @@ Use the local project or add `src/julia` to your Julia environment with
 `Pkg.develop(path="src/julia")`.
 
 ```sh
-julia --project=src/julia examples/julia/example.jl example.cfgy
+julia --project=src/julia examples/julia/example.jl examples/example.cfgy
 ```
 
 ## C#
@@ -105,7 +105,7 @@ Reference `src/csharp/Cfgy.csproj` from a .NET 8 project.
 `long`, and parse errors throw `FormatException`.
 
 ```sh
-dotnet run --project examples/csharp -- example.cfgy
+dotnet run --project examples/csharp -- examples/example.cfgy
 ```
 
 ## Lua
@@ -118,7 +118,7 @@ in lists and maps. The table metatable's `__name` is `cfgy.map` or `cfgy.list`.
 ```sh
 cmake -S . -B build -DCFGY_LUA=ON
 cmake --build build --target cfgy_lua
-LUA_CPATH="$PWD/build/lua/?.so;;" lua examples/lua/example.lua example.cfgy
+LUA_CPATH="$PWD/build/lua/?.so;;" lua examples/lua/example.lua examples/example.cfgy
 ```
 
 Use the module's platform extension when setting `LUA_CPATH`.
@@ -132,7 +132,7 @@ to the MATLAB path.
 ```sh
 cmake -S . -B build -DCFGY_MATLAB=ON -DMatlab_ROOT_DIR=/path/to/MATLAB
 cmake --build build --target cfgy_native
-matlab -batch "addpath('src/matlab','build','examples/matlab'); example_cfgy('example.cfgy')"
+matlab -batch "addpath('src/matlab','build','examples/matlab'); example_cfgy('examples/example.cfgy')"
 ```
 
 `cfgy.load(path)` and `cfgy.loads(text)` return a `containers.Map`. Lists are

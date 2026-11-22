@@ -56,7 +56,7 @@ numeric overflow, unknown names, and incompatible operands are errors.
 
 Python and C++ use the same bracket syntax after loading a file.
 
-| Lookup | Value in `example.cfgy` |
+| Lookup | Value in `examples/example.cfgy` |
 | --- | --- |
 | `cfg["myfloat2"]` | `9.0` |
 | `cfg["c"]["myel1"]` | `12` |
