@@ -1,0 +1,18 @@
+name: "Python on Linux"
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/test-binding.yml
+    with:
+      binding: python
+      runner: ubuntu-24.04

@@ -1,0 +1,18 @@
+name: "Lua on macOS"
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/test-binding.yml
+    with:
+      binding: lua
+      runner: macos-15
