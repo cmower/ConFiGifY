@@ -52,8 +52,9 @@ C++ dot access needs field names at compile time. Give the generator the paths
 your code reads. The configuration file is first opened by the running program.
 
 ```sh
-c++ -std=c++17 -Isrc/cpp src/cpp/cfgy.cpp src/cpp/tools/generate.cpp -o cfgy-gen
-./cfgy-gen --fields Settings c.myel1 myfloat2 > settings.hpp
+cmake -S . -B build
+cmake --build build --target cfgy-gen
+./build/cfgy-gen -o settings.hpp --fields Settings c.myel1 myfloat2
 ```
 
 Include `settings.hpp` and load any file containing those fields.
@@ -72,7 +73,7 @@ If a representative file is available during development, the generator can
 infer all fields and their native types in one command.
 
 ```sh
-./cfgy-gen sample.cfgy Settings > settings.hpp
+./build/cfgy-gen -o settings.hpp sample.cfgy Settings
 ```
 
 In this mode, lists of matching scalars become typed vectors. Empty, mixed,

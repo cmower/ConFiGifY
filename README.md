@@ -12,10 +12,10 @@ print(cfg.c.myel1)   # 12
 print(cfg.myfloat2)  # 9.0
 ```
 
-Run from the project root.
+Install from the project root.
 
 ```sh
-PYTHONPATH=src/python python3 examples/python/example.py
+python -m pip install .
 ```
 
 ## C++17
@@ -36,8 +36,9 @@ The build generates dot access from the names `c.myel1` and `myfloat2`.
 The program reads the configuration at runtime.
 
 ```sh
-./examples/cpp/build.sh
+cmake -S . -B build
+cmake --build build
 ./build/cfgy-example
 ```
 
-[Example configuration](example.cfgy) · [File format](FORMAT.md) · [Generate a C++ header](FORMAT.md#generate-a-c-header)
+[Run the examples](examples/README.md) · [Example configuration](example.cfgy) · [File format](FORMAT.md) · [Generate a C++ header](FORMAT.md#generate-a-c-header)

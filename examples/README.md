@@ -1,17 +1,20 @@
 # Examples
 
-Run these commands from the project root. Both examples read `example.cfgy`.
+Start each section in the project root. Both examples read `example.cfgy`.
 
 ## Python 3.9+
 
 ```sh
-PYTHONPATH=src/python python3 examples/python/example.py
+python -m pip install .
+cd examples/python
+python example.py
 ```
 
 ## C++17
 
 ```sh
-./examples/cpp/build.sh
+cmake -S . -B build
+cmake --build build
 ./build/cfgy-example
 ```
 
