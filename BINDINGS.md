@@ -127,6 +127,8 @@ julia --project=src/julia examples/julia/example.jl examples/example.cfgy
 
 ## C#
 
+The managed assembly is `Cfgy.Managed.dll`. On Windows, deploy it alongside the native `cfgy.dll`.
+
 Reference `src/csharp/Cfgy.csproj` from a .NET 8 project. Declare the loaded
 configuration as `dynamic` to chain map keys and list indices at runtime.
 
