@@ -36,24 +36,23 @@ also sets a trigger threshold. See the [format guide](FORMAT.md) for all operati
 
 ## Supported languages
 
-All ten languages use the same C++ evaluator. [Browse and run the examples](examples/README.md).
+All bindings use the same C++ evaluator. [Browse and run the examples](examples/README.md).
 
 Each badge shows the latest push run on `master` for that language and OS. Select a badge to see the test logs.
 
-| Language | Implemented | Linux | macOS | Windows |
-| --- | :---: | :---: | :---: | :---: |
-| C | ✓ | [![C on Linux][c-linux-badge]][c-linux] | [![C on macOS][c-macos-badge]][c-macos] | [![C on Windows][c-windows-badge]][c-windows] |
-| C++ | ✓ | [![C++ on Linux][cpp-linux-badge]][cpp-linux] | [![C++ on macOS][cpp-macos-badge]][cpp-macos] | [![C++ on Windows][cpp-windows-badge]][cpp-windows] |
-| C# | ✓ | [![C# on Linux][csharp-linux-badge]][csharp-linux] | [![C# on macOS][csharp-macos-badge]][csharp-macos] | [![C# on Windows][csharp-windows-badge]][csharp-windows] |
-| Go | ✓ | [![Go on Linux][go-linux-badge]][go-linux] | [![Go on macOS][go-macos-badge]][go-macos] | [![Go on Windows][go-windows-badge]][go-windows] |
-| Java | ✓ | [![Java on Linux][java-linux-badge]][java-linux] | [![Java on macOS][java-macos-badge]][java-macos] | [![Java on Windows][java-windows-badge]][java-windows] |
-| Julia | ✓ | [![Julia on Linux][julia-linux-badge]][julia-linux] | [![Julia on macOS][julia-macos-badge]][julia-macos] | [![Julia on Windows][julia-windows-badge]][julia-windows] |
-| Lua | ✓ | [![Lua on Linux][lua-linux-badge]][lua-linux] | [![Lua on macOS][lua-macos-badge]][lua-macos] | [![Lua on Windows][lua-windows-badge]][lua-windows] |
-| MATLAB/Octave\* | ✓ | [![Octave on Linux][octave-linux-badge]][octave-linux] | [![Octave on macOS][octave-macos-badge]][octave-macos] | [![Octave on Windows][octave-windows-badge]][octave-windows] |
-| Python | ✓ | [![Python on Linux][python-linux-badge]][python-linux] | [![Python on macOS][python-macos-badge]][python-macos] | [![Python on Windows][python-windows-badge]][python-windows] |
-| Rust | ✓ | [![Rust on Linux][rust-linux-badge]][rust-linux] | [![Rust on macOS][rust-macos-badge]][rust-macos] | [![Rust on Windows][rust-windows-badge]][rust-windows] |
-
-\* The MATLAB/Octave badges run the suite in GNU Octave. Testing in MATLAB itself is pending.
+| Language | Linux | macOS | Windows |
+| --- | :---: | :---: | :---: |
+| C | [![C on Linux][c-linux-badge]][c-linux] | [![C on macOS][c-macos-badge]][c-macos] | [![C on Windows][c-windows-badge]][c-windows] |
+| C++ | [![C++ on Linux][cpp-linux-badge]][cpp-linux] | [![C++ on macOS][cpp-macos-badge]][cpp-macos] | [![C++ on Windows][cpp-windows-badge]][cpp-windows] |
+| C# | [![C# on Linux][csharp-linux-badge]][csharp-linux] | [![C# on macOS][csharp-macos-badge]][csharp-macos] | [![C# on Windows][csharp-windows-badge]][csharp-windows] |
+| Go | [![Go on Linux][go-linux-badge]][go-linux] | [![Go on macOS][go-macos-badge]][go-macos] | [![Go on Windows][go-windows-badge]][go-windows] |
+| Java | [![Java on Linux][java-linux-badge]][java-linux] | [![Java on macOS][java-macos-badge]][java-macos] | [![Java on Windows][java-windows-badge]][java-windows] |
+| Julia | [![Julia on Linux][julia-linux-badge]][julia-linux] | [![Julia on macOS][julia-macos-badge]][julia-macos] | [![Julia on Windows][julia-windows-badge]][julia-windows] |
+| Lua | [![Lua on Linux][lua-linux-badge]][lua-linux] | [![Lua on macOS][lua-macos-badge]][lua-macos] | [![Lua on Windows][lua-windows-badge]][lua-windows] |
+| MATLAB | Untested | Untested | Untested |
+| Octave | [![Octave on Linux][octave-linux-badge]][octave-linux] | [![Octave on macOS][octave-macos-badge]][octave-macos] | [![Octave on Windows][octave-windows-badge]][octave-windows] |
+| Python | [![Python on Linux][python-linux-badge]][python-linux] | [![Python on macOS][python-macos-badge]][python-macos] | [![Python on Windows][python-windows-badge]][python-windows] |
+| Rust | [![Rust on Linux][rust-linux-badge]][rust-linux] | [![Rust on macOS][rust-macos-badge]][rust-macos] | [![Rust on Windows][rust-windows-badge]][rust-windows] |
 
 [c-linux-badge]: https://github.com/cmower/ConFiGifY/actions/workflows/c-linux.yml/badge.svg?branch=master&event=push
 [c-linux]: https://github.com/cmower/ConFiGifY/actions/workflows/c-linux.yml?query=branch%3Amaster+event%3Apush
