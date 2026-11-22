@@ -1,3 +1,7 @@
+#ifdef NDEBUG
+#undef NDEBUG  // Keep test assertions active in release builds.
+#endif
+
 #include <cfgy>
 #include "example_config.hpp"
 #include "test_config.hpp"
