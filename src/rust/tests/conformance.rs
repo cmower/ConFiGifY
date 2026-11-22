@@ -16,3 +16,13 @@ fn shared_fixture() {
     assert_eq!(cfg["mixed"][6], List(vec![]));
     assert!(loads("x: sqrt(-1)").unwrap_err().contains("<string>:1:4:"));
 }
+
+#[test]
+fn display_values() {
+    let cfg = loads("label: 'café'\nvalues: [null, true, 7, 2.5, []]").unwrap();
+    assert_eq!(cfg["label"].to_string(), "café");
+    assert_eq!(
+        cfg.to_string(),
+        r#"{"label": café, "values": [null, true, 7, 2.5, []]}"#
+    );
+}

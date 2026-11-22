@@ -1,6 +1,7 @@
 //! Rust values backed by the shared ConFiGifY evaluator.
 use std::collections::BTreeMap;
 use std::ffi::{c_char, c_void, CStr, CString};
+use std::fmt;
 use std::ops::Index;
 use std::path::Path;
 
@@ -14,6 +15,39 @@ pub enum Value {
     List(Vec<Value>),
     Map(BTreeMap<String, Value>),
 }
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Null => f.write_str("null"),
+            Self::Bool(value) => write!(f, "{value}"),
+            Self::Int(value) => write!(f, "{value}"),
+            Self::Float(value) => write!(f, "{value}"),
+            Self::String(value) => f.write_str(value),
+            Self::List(items) => {
+                f.write_str("[")?;
+                for (i, item) in items.iter().enumerate() {
+                    if i > 0 {
+                        f.write_str(", ")?;
+                    }
+                    write!(f, "{item}")?;
+                }
+                f.write_str("]")
+            }
+            Self::Map(fields) => {
+                f.write_str("{")?;
+                for (i, (key, value)) in fields.iter().enumerate() {
+                    if i > 0 {
+                        f.write_str(", ")?;
+                    }
+                    write!(f, "{key:?}: {value}")?;
+                }
+                f.write_str("}")
+            }
+        }
+    }
+}
+
 impl Index<&str> for Value {
     type Output = Value;
     fn index(&self, key: &str) -> &Self::Output {

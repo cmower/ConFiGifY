@@ -63,7 +63,8 @@ C++ uses `cfgy::load(path)` and `cfgy::loads(text, source)` from `<cfgy>`.
 
 Add `cfgy = { path = "/path/to/ConFiGifY/src/rust" }` to your dependencies.
 `cfgy::load(path)` and `cfgy::loads(text)` return `Result<Value, String>`.
-Index maps and lists with brackets, then match the scalar's `Value` variant.
+Index maps and lists with brackets. Use `println!("{}", value)` to print a value
+directly, or match its `Value` variant to work with the underlying Rust type.
 
 ```sh
 export CFGY_LIB_DIR="$PWD/build"
