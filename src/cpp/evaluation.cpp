@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <functional>
 #include <stdexcept>
 #include <utility>
 
@@ -81,7 +82,18 @@ Eval scale(Matrix matrix, char op, double scalar) {
     return Eval{std::move(matrix)};
 }
 
-Eval multiply(const Matrix& a, const Matrix& b) {
+template<class Operation>
+Eval elementwise(Matrix left, const Matrix& right, Operation combine) {
+    if (left.size() != right.size() || left.front().size() != right.front().size())
+        throw std::domain_error("element-wise operations require matrices of the same shape");
+    for (std::size_t i = 0; i < left.size(); ++i) {
+        for (std::size_t j = 0; j < left[i].size(); ++j)
+            left[i][j] = finite(combine(left[i][j], right[i][j]));
+    }
+    return Eval{std::move(left)};
+}
+
+Eval matrix_product(const Matrix& a, const Matrix& b) {
     if (a.front().size() != b.size()) throw std::domain_error("matrix product dimensions do not match");
     Matrix result(a.size(), std::vector<double>(b.front().size()));
     for (std::size_t i = 0; i < a.size(); ++i) {
@@ -143,21 +155,17 @@ Eval matrix_operation(char op, Eval left, Eval right) {
 
     auto* a = std::get_if<Matrix>(&left.data);
     auto* b = std::get_if<Matrix>(&right.data);
-    if (a && b) {
-        if (op == '*') return multiply(*a, *b);
-        if (op != '+' && op != '-') throw std::domain_error("expected a scalar divisor");
-        if (a->size() != b->size() || a->front().size() != b->front().size())
-            throw std::domain_error("matrix addition and subtraction require equal dimensions");
-        for (std::size_t i = 0; i < a->size(); ++i) {
-            for (std::size_t j = 0; j < (*a)[i].size(); ++j) {
-                double& cell = (*a)[i][j];
-                cell = finite(op == '+' ? cell + (*b)[i][j] : cell - (*b)[i][j]);
-            }
-        }
-        return left;
+    if (op == '@') {
+        if (a && b) return matrix_product(*a, *b);
+        if (a && std::holds_alternative<Eval::List>(right.data)) return apply_vector(*a, right.as_list());
+        throw std::domain_error("'@' expects a matrix on the left and a matrix or vector on the right");
     }
-    if (a && op == '*' && std::holds_alternative<Eval::List>(right.data))
-        return apply_vector(*a, right.as_list());
+    if (a && b) {
+        if (op == '+') return elementwise(std::move(*a), *b, std::plus<double>{});
+        if (op == '-') return elementwise(std::move(*a), *b, std::minus<double>{});
+        if (op == '*') return elementwise(std::move(*a), *b, std::multiplies<double>{});
+        throw std::domain_error("expected a scalar divisor");
+    }
     if (a && is_number(right) && (op == '*' || op == '/')) return scale(std::move(*a), op, to_double(right));
     if (b && is_number(left) && op == '*') return scale(std::move(*b), op, to_double(left));
     throw std::domain_error("invalid matrix operands");

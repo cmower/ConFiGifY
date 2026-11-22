@@ -58,8 +58,9 @@ int main() {
     const auto& pair = math["random_number"].as_list();
     assert(pair.size() == 2);
     for (const auto& value : pair) assert(-1 <= value.as_float() && value.as_float() < 1);
-    const auto matrices = cfgy::loads("a: matrix([[1, 2]])\nb: (a + a) * transpose(a)");
+    const auto matrices = cfgy::loads("a: matrix([[1, 2]])\nb: (a + a) @ transpose(a)\nc: a * a");
     assert(matrices["b"][0][0].as_float() == 10.0);
+    assert(matrices["c"][0][1].as_float() == 4.0);
     const std::string draws = "seed: Rand.seed(7)\nx: Rand.uniform()\ny: Rand.int(1, 6)";
     const auto random = cfgy::loads(draws);
     assert(random["x"].as_float() == cfgy::loads(draws)["x"].as_float());

@@ -76,18 +76,20 @@ cal:
   a: matrix([[1, 2, 3], [4, 5, 6]])
 alias: cal.a
 b: [[2, 0], [0, 1], [1, -1]]
-product: alias * b
-vector: alias * [2, 0, 1]
+product: alias @ b
+vector: alias @ [2, 0, 1]
+weighted: alias * [[1, 0, -1], [2, 3, 4]]
 scaled: 3 * alias / 2
 sum: alias + cal.a * 2
 difference: sum - alias
 negative: -alias
 joined: [[1, 2]] + [[3, 4]]
-row_product: [[1, 2]] * [[3], [4]]
+row_product: [[1, 2]] @ [[3], [4]]
 columns: transpose(alias)
 """)
         self.assertEqual(cfg.product, [[5, -1], [14, -1]])
         self.assertEqual(cfg.vector, [5, 14])
+        self.assertEqual(cfg.weighted, [[1, 0, -3], [8, 15, 24]])
         self.assertEqual(cfg.scaled, [[1.5, 3, 4.5], [6, 7.5, 9]])
         self.assertEqual(cfg["sum"], [[3, 6, 9], [12, 15, 18]])
         self.assertEqual(cfg.difference, [[2, 4, 6], [8, 10, 12]])
@@ -97,6 +99,20 @@ columns: transpose(alias)
         self.assertEqual(cfg.columns, [[1, 4], [2, 5], [3, 6]])
         self.assertIs(type(cfg.alias[0][0]), float)
 
+    def test_matrix_product_operators(self):
+        cfg = cfgy.loads("""
+a: [[1, 2], [3, 4]]
+b: [[5, 6], [7, 8]]
+cells: a * b
+product: a @ b
+mixed: a * b @ a
+sum: a + a @ b
+""")
+        self.assertEqual(cfg.cells, [[5, 12], [21, 32]])
+        self.assertEqual(cfg.product, [[19, 22], [43, 50]])
+        self.assertEqual(cfg.mixed, [[41, 58], [117, 170]])
+        self.assertEqual(cfg["sum"], [[20, 24], [46, 54]])
+
     def test_rotation_conventions(self):
         cfg = cfgy.load("tests/conformance.cfgy")
         expected = [[1, 0, 0], [0, 0, 1], [0, -1, 0]]
@@ -104,10 +120,10 @@ columns: transpose(alias)
             for actual, target in zip(row, expected_row):
                 self.assertAlmostEqual(actual, target)
         for magnitude in ("1", "1e300", "1e-300"):
-            cfg = cfgy.loads(f"v: Rot.from_quat([0, 0, {magnitude}, {magnitude}]) * [1, 0, 0]")
+            cfg = cfgy.loads(f"v: Rot.from_quat([0, 0, {magnitude}, {magnitude}]) @ [1, 0, 0]")
             self.assertEqual(cfg.v, [0, 1, 0])
         # RPY applies roll, then pitch, then yaw to a column vector.
-        cfg = cfgy.loads("v: Rot.from_rpy(90, 90, 90) * [0, 1, 0]")
+        cfg = cfgy.loads("v: Rot.from_rpy(90, 90, 90) @ [0, 1, 0]")
         for actual, target in zip(cfg.v, [0, 1, 0]):
             self.assertAlmostEqual(actual, target)
         cfg = cfgy.loads("Rot:\n  from_rpy: 7\nv: Rot.from_rpy")
@@ -186,7 +202,9 @@ standard: [Rand.normal(), Rand.normal()]
         invalid = [
             "matrix()", "matrix([])", "matrix([[]])", "matrix([[1], [2, 3]])",
             "matrix([[true]])", "matrix([[1]]) + matrix([[1, 2]])",
-            "matrix([[1, 2]]) * matrix([[3, 4]])", "matrix([[1, 2]]) * [1]",
+            "[[1, 2]] * [[3], [4]]", "[[1, 2]] @ [[3, 4]]", "matrix([[1, 2]]) * [1, 2]",
+            "[[1, 2]] @ [1]", "1 @ 2", "1.0 @ 2.0", "[[2]] @ 3", "3 @ [[2]]",
+            "[[1e300]] * [[1e300]]", "[[1e300]] @ [[1e300]]",
             "matrix([[1]]) / 0", "matrix([[1e300]]) * 1e300",
             "Rot.from_quat(0, 0, 0, 0)", "Rot.from_rpy(1, 2)", "Rot.from_quat([0, 0, 1, 'x'])",
             "Rot.unknown()", "Rand.seed(1.5)", "Rand.uniform(1)", "Rand.uniform(1, 1)",

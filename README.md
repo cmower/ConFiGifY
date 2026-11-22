@@ -28,7 +28,7 @@ simulation:
   accel_gain: matrix([[1.01, 0, 0], [0, 1, 0], [0, 0, 0.99]])
   lateral_noise_m_s2: Rand.uniform[noise_seed](-0.02, 0.02)
   sensor_pulse_m_s2: lateral_noise_m_s2 + [2]
-  body_pulse_m_s2: mount.sensor_to_body * accel_gain * sensor_pulse_m_s2
+  body_pulse_m_s2: mount.sensor_to_body @ accel_gain @ sensor_pulse_m_s2
 ```
 
 Change `rate_hz` to `100` and the same two-second recording has 200 samples,

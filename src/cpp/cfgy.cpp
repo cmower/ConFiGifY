@@ -110,7 +110,7 @@ Line lex_line(const std::string& line, std::size_t number, const std::string& so
             }
             token.kind = "number";
             token.text = line.substr(start, i - start);
-        } else if (std::string_view(":[],().+-*/").find(c) != std::string_view::npos) {
+        } else if (std::string_view(":[],().+-*/@").find(c) != std::string_view::npos) {
             token.kind = token.text = std::string(1, c);
         } else {
             fail(source, token, "unexpected character");
@@ -145,7 +145,7 @@ std::vector<Line> read_lines(std::istream& input, const std::string& source) {
 
 int precedence(const std::string& op) {
     if (op == "+" || op == "-") return 1;
-    if (op == "*" || op == "/") return 2;
+    if (op == "*" || op == "/" || op == "@") return 2;
     return 0;
 }
 
@@ -350,7 +350,7 @@ private:
             list.insert(list.end(), right.as_list().begin(), right.as_list().end());
             return left;
         }
-        if (detail::is_matrix_operand(left) || detail::is_matrix_operand(right))
+        if (op.kind == "@" || detail::is_matrix_operand(left) || detail::is_matrix_operand(right))
             return matrix_op(op, op.kind.front(), std::move(left), std::move(right));
         if (!is_number(left) || !is_number(right)) fail(source_, op, "invalid operands for '" + op.kind + "'");
         if (op.kind != "/" && std::holds_alternative<Integer>(left.data) &&

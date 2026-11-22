@@ -41,7 +41,7 @@ The expression grammar, from lowest precedence to highest, is
 
 ```text
 expression = product { ("+" | "-") product }
-product    = unary { ("*" | "/") unary }
+product    = unary { ("*" | "/" | "@") unary }
 unary      = ("+" | "-") unary | primary
 primary    = number | string | name { "." name } | function "(" [arguments] ")"
            | "Rand" "." ("uniform" | "normal" | "int") "[" expression "]" "(" [arguments] ")"
@@ -68,33 +68,39 @@ list of rows, so existing key and list indexing works.
 
 ```text
 a: matrix([[1, 2], [3, 4]])
-b: 2 * a
-sum: a + b                 # [[3, 6], [9, 12]]
-product: a * b             # [[14, 20], [30, 44]]
-vector: transpose(a) * [1, 0]  # [1, 2]
+b: [[5, 6], [7, 8]]
+cells: a * b                 # [[5, 12], [21, 32]]
+product: a @ b               # [[19, 22], [43, 50]]
+vector: transpose(a) @ [1, 0]  # [1, 2]
 ```
 
-Addition and subtraction require equal shapes. For a matrix product, the left
-column count must equal the right row count. A flat numeric list on the right
-of `*` acts as a column vector. Matrices also support unary signs, multiplication
-by a scalar on either side, and division by a nonzero scalar.
+For two matrices, `*` multiplies corresponding entries and requires equal
+shapes. With `@`, an *m × n* matrix times an *n × p* matrix produces an
+*m × p* matrix. A flat numeric list on the right of `@` acts as a column
+vector and the result is a flat list. `*`, `/`, and `@` have equal precedence
+and evaluate left to right.
 
-Plain row lists can be used directly for products or subtraction. For addition,
+When updating an older `.cfgy` file, replace `*` with `@` wherever it composes
+matrices or applies a matrix to a vector. Keep `2 * a` or `a * 2` for scalar
+scaling. Matrices also support unary signs and division by a nonzero scalar.
+
+Plain row lists can be used directly for products or subtraction. Addition
+and subtraction use matching shapes. For addition,
 wrap at least one operand in `matrix(...)` to select elementwise addition.
 Two plain lists joined with `+` always concatenate.
 
 ```text
 rpy: [90, 0, 180]
-rotation: Rot.from_rpy(rpy) * Rot.from_quat(0, 0, 1, 0)
-direction: rotation * [0, 1, 0]  # approximately [0, 0, -1]
+rotation: Rot.from_rpy(rpy) @ Rot.from_quat(0, 0, 1, 0)
+direction: rotation @ [0, 1, 0]  # approximately [0, 0, -1]
 ```
 
 Both constructors accept separate components or a single list and return a
 3×3 matrix. `Rot.from_rpy(roll, pitch, yaw)` takes angles in degrees and
-computes the active, right-handed rotation `Rz(yaw) * Ry(pitch) * Rx(roll)`.
+computes the active, right-handed rotation `Rz(yaw) @ Ry(pitch) @ Rx(roll)`.
 For angles already in radians, use `Rot.from_rpy(todeg(roll, pitch, yaw))`.
 `Rot.from_quat(x, y, z, w)` normalizes a nonzero quaternion with the scalar
-component last. In `A * B * v`, rotation `B` acts on the vector first.
+component last. In `A @ B @ v`, rotation `B` acts on the vector first.
 
 ## Random numbers
 
