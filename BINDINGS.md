@@ -92,9 +92,18 @@ export CGO_LDFLAGS="-L$PWD/build"
 ## Java
 
 Use a JDK with JNI headers and set `JAVA_HOME` to the JDK directory.
-`io.configify.Cfgy.load(Path)` and `Cfgy.loads(String)` return
-`Map<String, Object>` containing lists, strings, booleans, `Long`, `Double`,
-and `null`. Parse errors throw `IllegalArgumentException`.
+Pass one literal key per level to `Cfgy.lookup`. Use `cfg.get` for a top-level key.
+
+```java
+var cfg = Cfgy.load(Path.of(args[0]));
+System.out.println(Cfgy.lookup(cfg, "c", "myel1"));
+System.out.println(cfg.get("myfloat2"));
+```
+
+`io.configify.Cfgy.load(Path)` and `Cfgy.loads(String)` return `Map<String, Object>`.
+Integers are `Long` and floats are `Double`. A missing lookup path throws
+`NoSuchElementException`. An explicit `null` returns `null`. Parse errors throw
+`IllegalArgumentException`.
 
 ```sh
 cmake -S . -B build -DCFGY_JAVA=ON

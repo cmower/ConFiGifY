@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public final class Cfgy {
     static { System.loadLibrary("cfgy_jni"); }
@@ -20,6 +21,23 @@ public final class Cfgy {
     public static Map<String, Object> loads(String text, String source) {
         return parse(text.getBytes(StandardCharsets.UTF_8), sourceBytes(source));
     }
+
+    /** Follows literal map keys. An empty path selects the root.
+     * @throws NoSuchElementException if a key is missing or its parent is not a map
+     */
+    public static Object lookup(Map<String, ?> cfg, String... keys) {
+        Object value = cfg;
+        for (String key : keys) {
+            if (!(value instanceof Map<?, ?>)) {
+                throw new NoSuchElementException("Expected a map before key '" + key + "'");
+            }
+            Map<?, ?> map = (Map<?, ?>) value;
+            if (!map.containsKey(key)) throw new NoSuchElementException("Missing key '" + key + "'");
+            value = map.get(key);
+        }
+        return value;
+    }
+
     private static byte[] sourceBytes(String source) {
         if (source.indexOf('\0') >= 0) throw new IllegalArgumentException("NUL in source name");
         return (source + '\0').getBytes(StandardCharsets.UTF_8);
