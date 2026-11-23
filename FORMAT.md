@@ -4,15 +4,17 @@ ConFiGifY borrows indentation and `key: value` syntax from YAML. The formats
 are incompatible. For example, ConFiGifY evaluates `samples: 2 * 400` as the
 integer `800`. A YAML parser reads that expression as a string.
 
-- A UTF-8 document contains one top-level mapping. Each entry begins with
-  `key:`. Indent child blocks with spaces and align siblings at the same column.
+- A UTF-8 document contains one top-level mapping. Start its keys in column one.
+  Each entry begins with `key:`. You can put its value on the same line or on
+  an indented line below it. Indent with spaces and align siblings at the same column.
   An empty document produces an empty mapping. An entry with no value or child
   block has the value `null`.
 - Keys are ASCII identifiers (`[A-Za-z_][A-Za-z0-9_]*`) or quoted strings.
   Each key must be unique within its mapping.
 - Write a list inline as `[1, 3]`, or start each block item with a dash
-  followed by a space or newline. A list item may itself contain a mapping or
-  list. For example, `- speed: 12` starts a mapping inside a list.
+  followed by a space, a tab, or the end of the line. A list item may itself
+  contain a mapping or list. For example, `- speed: 12` starts a mapping inside a list.
+  A dash with no value or child block contributes a `null` item.
 - Write literal text in single or double quotes. Both styles accept the escapes
   `\\`, `\"`, `\'`, `\n`, `\r`, and `\t`. A `#` outside quotes starts a line
   comment. Each expression fits on one line.
@@ -28,8 +30,10 @@ b: 5
 
 Lookup starts in the current mapping and continues through its enclosing
 mappings. The nearest definition wins, even if it appears later. Use a dotted
-path such as `sensor.rate_hz` to read a nested field. The built-in names
-`true`, `false`, `null`, and `pi` take precedence when used on their own.
+path such as `sensor.rate_hz` to read a nested field. Each path component must
+be an ASCII identifier. The first name in a reference always resolves to the
+built-in value if it is `true`, `false`, `null`, or `pi`. After a dot, the
+same names select map keys, so `sensor.pi` reads the field named `pi` in `sensor`.
 
 The parser visits settings in file order and evaluates each setting's dependencies
 first. It evaluates each setting once, so two references to the same random draw
@@ -71,20 +75,20 @@ lists every function, its arguments, and its return type.
 
 ## Matrices and rotations
 
-`matrix(rows)` accepts a nonempty rectangular list of nonempty numeric rows.
-Matrix arithmetic uses double precision. Each binding returns the result as a
-list of rows, so existing key and list indexing works.
+`matrix(rows)` accepts a nonempty rectangular list of nonempty numeric rows
+or an existing matrix. Matrix arithmetic uses double precision. Each binding
+receives a matrix as a list of rows containing floats.
 
 ```text
 a: matrix([[1, 2], [3, 4]])
 b: [[5, 6], [7, 8]]
-cells: a * b                 # [[5, 12], [21, 32]]
-product: a @ b               # [[19, 22], [43, 50]]
-vector: transpose(a) @ [1, 0]  # [1, 2]
+cells: a * b                   # [[5.0, 12.0], [21.0, 32.0]]
+product: a @ b                 # [[19.0, 22.0], [43.0, 50.0]]
+vector: transpose(a) @ [1, 0]  # [1.0, 2.0]
 ```
 
 Use `diag(2, 3, 4)` for per-axis gains. For example, `diag(2, 3, 4) @ [1, 2, 3]`
-gives `[2, 6, 12]`.
+gives `[2.0, 6.0, 12.0]`.
 
 For two matrices, `*` multiplies corresponding entries and requires equal
 shapes. With `@`, an *m × n* matrix times an *n × p* matrix produces an
@@ -96,10 +100,11 @@ When updating an older `.cfgy` file, replace `*` with `@` wherever it composes
 matrices or applies a matrix to a vector. Keep `2 * a` or `a * 2` for scalar
 scaling. Matrices also support unary signs and division by a nonzero scalar.
 
-Plain row lists can be used directly for products or subtraction. Addition
-and subtraction use matching shapes. For addition,
-wrap at least one operand in `matrix(...)` to select elementwise addition.
-Two plain lists joined with `+` always concatenate.
+Plain row lists can be used directly for products or elementwise subtraction.
+Subtraction requires equal shapes. Two plain lists joined with `+` always
+concatenate. If either operand is already a matrix, `+` adds corresponding
+entries and requires equal shapes. For example,
+`diag(2, 3) + [[1, 0], [0, 1]]` gives `[[3.0, 0.0], [0.0, 4.0]]`.
 
 ```text
 rpy: [90, 0, 180]
@@ -131,7 +136,9 @@ such as `alias: seed1` shares its position. Two calls to `Rand.seed(42)` start
 independent streams with the same sequence on the same implementation.
 
 Calls without brackets return one draw from the load's default generator.
-The first such draw uses a system seed if the file has not called `Rand.seed`.
+Each evaluation of `Rand.seed(n)` also resets that generator to `n`.
+Drawing from a selected stream advances only that stream. If a default draw
+occurs before any seed is evaluated, the generator uses a system seed.
 
 ## Reading values
 
