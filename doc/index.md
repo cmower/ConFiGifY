@@ -21,9 +21,9 @@ At 400 Hz the recorder takes 800 samples, 2.5 ms apart. Changing `rate_hz` to
 
 ## Run the example
 
-The Python binding needs Python 3.9+, its development headers, and a C++17
-compiler. From a [ConFiGifY checkout](https://github.com/cmower/ConFiGifY),
-run the bundled example in an active virtual environment.
+To build the Python binding from the checkout, use Python 3.9 or later with
+its development headers and a C++17 compiler. In an active virtual environment,
+run these commands from the [repository root](https://github.com/cmower/ConFiGifY).
 
 ```sh
 python3 -m pip install .

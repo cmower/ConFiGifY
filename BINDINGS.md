@@ -24,14 +24,19 @@ $env:Path = "$PWD\build\Release;$env:Path"
 .\build\Release\example.exe examples\example.cfgy
 ```
 
+The shell examples below use a single-configuration build. With Visual Studio,
+use `--config Release` on build and install commands and `-C Release` with
+CTest. Native binaries are under `build/Release` (`build/lua/Release` for Lua).
+Windows CI uses MinGW-w64 for Go, Lua, and Octave.
+
 To install the C/C++ headers and library under a prefix, run
 `cmake --install build --prefix /your/prefix`.
 
 ## Python
 
-Pip builds the C++ evaluator into a CPython extension. A source install requires
-a C++17 compiler and Python development headers. A wheel for your Python version
-and platform includes the evaluator.
+Installing from source requires Python 3.9 or later, a C++17 compiler, and
+Python development headers. Pip builds the evaluator into a CPython extension.
+A compatible wheel includes the compiled evaluator.
 
 ```sh
 python3 -m venv .venv
@@ -41,13 +46,16 @@ python3 examples/python/example.py examples/example.cfgy
 ```
 
 `cfgy.load(path)` and `cfgy.loads(text, source="<string>")` return a `Config`.
-Use string keys for maps and integer indices for lists. Existing attribute lookup
-also works. Syntax and evaluation errors raise `cfgy.ConfigError`.
+Use string keys for maps and integer indices for lists. Attribute lookup such
+as `cfg.recording.samples` works for keys usable in Python dot syntax. Use
+brackets for keys such as `"a.b"` or `"_fields"` that contain punctuation or
+collide with an existing attribute. Syntax and evaluation errors raise
+`cfgy.ConfigError`. Reading a file with invalid UTF-8 raises `UnicodeDecodeError`.
 
 ## C and C++
 
 In C, load the file with `cfgy_load(path)` and check `cfgy_error(cfg)`.
-C11's `cfgy_read` takes one literal map key per level. The output variable
+C11's `cfgy_read` takes one NUL-terminated map key per level. The output variable
 selects the type (`int64_t`, `double`, `bool`, or `cfgy_string`).
 
 ```c
@@ -59,7 +67,9 @@ if (cfgy_read(cfg, &samples, "recording", "samples")) {
 
 A read returns 1 on success. A missing key or incompatible type returns 0 and
 leaves the output untouched. A `double` accepts either an integer or a float.
-For lists and maps, use `cfgy_root`, `cfgy_get`, and the node's children.
+Use `cfgy_root` to get the root node and `cfgy_get` to look up a map key.
+Index `children[0]` through `children[count - 1]` to traverse a list or map.
+Each map child carries its key as a UTF-8 byte span, including any embedded NUL.
 Strings and nodes belong to the document. Call `cfgy_free(cfg)` when finished,
 including on error. For in-memory input, use `cfgy_parse(bytes, length, source)`.
 
@@ -68,12 +78,17 @@ including on error. For in-memory input, use `cfgy_parse(bytes, length, source)`
 ./build/example examples/example.cfgy
 ```
 
-C++ uses `cfgy::load(path)` and `cfgy::loads(text, source)` from `<cfgy>`.
+In C++, `cfgy::load(path)` and `cfgy::loads(text)` from `<cfgy>` return a
+`cfgy::Value`. An optional second argument to `loads` supplies the source
+name for errors (default `"<string>"`). Use `cfg["a.b"]` for a literal key
+and `cfg.at("a.b")` or `cfg("a.b")` for the nested path `cfg["a"]["b"]`.
+List indices start at zero. Parse and evaluation errors throw `cfgy::ConfigError`.
 
 ## Rust
 
 Add `cfgy = { path = "/path/to/ConFiGifY/src/rust" }` to your dependencies.
 `cfgy::load(path)` and `cfgy::loads(text)` return `Result<Value, String>`.
+Use `cfgy::loads_named(text, source)` to supply a source name for errors.
 Index maps and lists with brackets. Use `println!("{}", value)` to print a value
 directly, or match its `Value` variant to work with the underlying Rust type.
 
@@ -84,6 +99,7 @@ cargo run --manifest-path examples/rust/Cargo.toml -- examples/example.cfgy
 
 ## Go
 
+Use Go 1.18 or later with cgo enabled and a C compiler.
 Import `github.com/cmower/ConFiGifY/src/go` as `cfgy`. Use brackets for a
 top-level key. For nested keys, pass one key per level to
 `cfgy.Lookup`. Both forms support Go's usual presence check.
@@ -94,7 +110,10 @@ intervalMS, hasInterval := cfgy.Lookup(cfg, "recording", "interval_ms")
 ```
 
 `cfgy.Load(path)` and `cfgy.Loads(text)` return `(map[string]any, error)`.
-Integers are `int64` and lists are `[]any`.
+Integers are `int64` and lists are `[]any`. The example uses the local Go
+module and C header in this checkout. When importing the module elsewhere,
+make the installed `cfgy.h` and library available to cgo, using `CGO_CFLAGS`
+and `CGO_LDFLAGS` if the installation uses a custom prefix.
 
 ```sh
 export CGO_LDFLAGS="-L$PWD/build"
@@ -113,6 +132,7 @@ System.out.println(Cfgy.lookup(cfg, "recording", "interval_ms"));
 ```
 
 `io.configify.Cfgy.load(Path)` and `Cfgy.loads(String)` return `Map<String, Object>`.
+`Cfgy.loads(text, source)` supplies a source name for errors.
 Integers are `Long` and floats are `Double`. A missing lookup path throws
 `NoSuchElementException`. An explicit `null` returns `null`. Parse errors throw
 `IllegalArgumentException`.
@@ -127,7 +147,7 @@ The single-file example command requires Java 11 or later.
 
 ## Julia
 
-`ConFiGifY.load(path)` and `ConFiGifY.loads(text)` return a
+`ConFiGifY.load(path)` and `ConFiGifY.loads(text; source="<string>")` return a
 `Dict{String,Any}`. Lists are one-based vectors and `null` becomes `nothing`.
 Use the local project or add `src/julia` to your Julia environment with
 `Pkg.develop(path="src/julia")`.
@@ -150,7 +170,8 @@ double intervalMs = cfg["recording"]["interval_ms"];
 ```
 
 `Load(path)` and `Loads(text)` return a `Dictionary<string, object?>` with
-`object?[]` lists. Parse errors throw `FormatException`.
+`object?[]` lists. `Loads(text, source)` supplies the source name used in
+`FormatException` messages.
 
 ```sh
 dotnet run --project examples/csharp -- examples/example.cfgy
@@ -159,9 +180,11 @@ dotnet run --project examples/csharp -- examples/example.cfgy
 ## Lua
 
 Build against the same Lua installation you use to run scripts (5.3+ with
-64-bit integers). `require("cfgy").load(path)` and `cfgy.loads(text)` return
-tables. Lists start at one. `cfgy.null` represents null and preserves its place
-in lists and maps. The table metatable's `__name` is `cfgy.map` or `cfgy.list`.
+64-bit integers). With `local cfgy = require("cfgy")`, both `cfgy.load(path)`
+and `cfgy.loads(text)` return tables. An optional second argument to `loads`
+names the source for errors. Lists start at one. `cfgy.null` represents null
+and preserves its place in lists and maps. The table metatable's `__name` is
+`cfgy.map` or `cfgy.list`.
 
 ```sh
 cmake -S . -B build -DCFGY_LUA=ON
@@ -195,9 +218,11 @@ disp(cfg{'sensor'}{'channels'}{1});      % ax
 ```
 
 `cfgy.load(path)` and `cfgy.loads(text)` return a `cfgy.Config`, a
-`containers.Map` subclass. Standard map lookups such as `cfg('sensor')`
-also work. Lists are cell arrays, integers are `int64`, strings are character
-vectors, and `null` becomes `[]`. Parse errors use the identifier `cfgy:Parse`.
+`containers.Map` subclass. `cfgy.loads(text, source)` accepts a source name
+for errors and can read text or UTF-8 bytes (`uint8`). Standard map lookups
+such as `cfg('sensor')` also work. Lists are cell arrays, integers are `int64`,
+strings are character vectors, and `null` becomes `[]`. Parse errors use the
+identifier `cfgy:Parse`.
 
 ## GNU Octave
 
@@ -212,15 +237,17 @@ octave-cli --quiet --eval "addpath('src/matlab','build','examples/matlab'); exam
 
 ## Conformance checks
 
-GitHub Actions runs each binding's tests on Linux, macOS, and Windows for
-pull requests targeting `master` and for each push to `master`. The
+GitHub Actions tests the bindings on Linux, macOS, and Windows for pull
+requests targeting `master` and for each push to `master`. It runs the
+MATLAB/Octave binding's tests in GNU Octave. The
 [status table](README.md#supported-languages) shows the push results. To test
 a branch manually, open **Actions**, choose a language and OS, then select
 **Run workflow** and the branch.
 
-The fixtures in `tests/` check numeric types, Unicode, nested keys, mixed
-lists, nulls, and math errors against the same core. With the relevant bindings
-built and the environment variables above set, run their checks from the root.
+The tests use shared fixtures for numeric types, Unicode, nested keys, mixed
+lists, and nulls. They also check errors from the evaluator. With the relevant
+bindings built and the environment variables above set, run their checks from
+the repository root.
 
 ```sh
 cmake -S . -B build -DBUILD_TESTING=ON
@@ -228,10 +255,11 @@ cmake --build build
 (cd build && ctest --output-on-failure)
 python3 tests/python/test_configify.py
 cargo test --manifest-path src/rust/Cargo.toml
-(cd src/go && go test ./...)
+(cd src/go && go test -count=1 ./...)
 java -Djava.library.path=build -cp build/cfgy.jar tests/java/Check.java tests/conformance.cfgy
 julia --project=src/julia tests/julia/check.jl tests/conformance.cfgy
 dotnet run --project tests/csharp -- tests/conformance.cfgy
 LUA_CPATH="$PWD/build/lua/?.so;;" lua tests/lua/check.lua tests/conformance.cfgy
+octave-cli --quiet --eval "addpath('src/matlab','build','tests/matlab'); check_cfgy('tests/conformance.cfgy')"
 matlab -batch "addpath('src/matlab','build','tests/matlab'); check_cfgy('tests/conformance.cfgy')"
 ```
